@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { RadioSet } from "./components/RadioSet";
 import { Button } from "./components/Button";
 import { Select } from "./components/Select";
+import { TextInput } from "./components/TextInput";
 
 interface MapViewProps {
     mapInputMode: 'panning'|'drawing',
@@ -69,7 +70,7 @@ export function MapView({mapInputMode, setMapInputMode, ...props}: MapViewProps)
                     <label>
                         Bookmark current location:
                         {' '}
-                        <input name='bookmark' type='text' />
+                        <TextInput name='bookmark' />
                     </label>
                     <Button>Save</Button>
                 </form>
