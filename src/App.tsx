@@ -5,14 +5,15 @@ import { MapView } from './MapView';
 
 function App() {
 
-  const [split, setSplit] = useState(0.8);
+  const [splitHorizontal, setSplitHorizontal] = useState(0.8);
+  const [splitVertical, setSplitVertical] = useState(0.8);
 
   /* Map controls */
   const [mapInputMode, setMapInputMode] = useState<'panning'|'drawing'>('panning');
   
   return (
-    <Splitter vertical split={0.8} slot1={
-      <Splitter split={split} slot1={
+    <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
+      <Splitter split={splitHorizontal} setSplit={setSplitHorizontal} gutter='20px' slot1={
         <MapView mapInputMode={mapInputMode} setMapInputMode={setMapInputMode} />
       } slot2={
         <>
