@@ -28,10 +28,11 @@ interface SplitterStyleProps {
 const WrapperStyled = styled.div<SplitterStyleProps>`
     width: 100%;
     height: 100%;
+    overflow: hidden;
     display: grid;
     ${(p) => (p.vertical?'grid-template-rows':'grid-template-columns')}:
         clamp(calc(${(p) => p.slot1min}),
-              ${(p) => (p.split * 100)}%,
+              calc(${(p) => (p.split * 100)}% - ${(p)=>p.gutter} / 2),
               calc(100% - ${(p) => p.slot2min}))
         calc(${(p) => p.gutter})
         1fr;
