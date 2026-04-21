@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react";
+import { Fragment, useId, type ReactNode } from "react";
 import styled from "styled-components";
 import { buttonStyles } from "./Button";
 
@@ -55,7 +55,7 @@ export function RadioSet<T extends string|number>({legend, name, options, checke
         <FieldSetStyled>
             {legend && <legend>{legend}</legend>}
             {Object.keys(options).map((key) => {
-                return (<><input id={id + key} type='radio' name={name} value={key} checked={key === checked} onChange={(ev)=>{onChange(ev.target.value as T)}}/><label htmlFor={id + key}>{options[key as T]}</label></>)
+                return (<Fragment key={key}><input id={id + key} type='radio' name={name} value={key} checked={key === checked} onChange={(ev)=>{onChange(ev.target.value as T)}}/><label htmlFor={id + key}    >{options[key as T]}</label></Fragment>)
             })}
         </FieldSetStyled>
     );
