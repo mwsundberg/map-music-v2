@@ -1,8 +1,9 @@
 import { useState } from "react";
-
 import { Layer, Map, Source} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import styled from "styled-components";
+import { RadioSet } from "./components/RadioSet";
+import { Button } from "./components/Button";
 
 interface MapViewProps {
     mapInputMode: 'panning'|'drawing',
@@ -12,16 +13,8 @@ interface MapViewProps {
 /* Styled divs used in the MapView */
 const ControlsContainer = styled.div`
     display: flex;
-    gap: 2ch;
-    
-    fieldset {
-        border: none;
-        padding: 0;
-
-        legend {
-            float: left;
-        }
-    }
+    gap: 1ch;
+    flex-wrap: wrap;
 `;
 const MapContainer = styled.div`
     display: flex;
@@ -30,7 +23,7 @@ const MapContainer = styled.div`
 `;
 
 /** Map with controls for a location bookmark system */
-export function MapView({mapInputMode, setMapInputMode}: MapViewProps) {
+export function MapView({mapInputMode, setMapInputMode, ...props}: MapViewProps) {
     const [mapPresets, setMapPresets] = useState([
         { name: "Grand Canyon",            viewState: { latitude: 35.8102593, longitude: -113.6302593, zoom: 11 }},
         { name: "Vancouver Mountains",     viewState: { latitude: 49.3822072, longitude: -123.1363749, zoom: 12 }},
@@ -44,13 +37,9 @@ export function MapView({mapInputMode, setMapInputMode}: MapViewProps) {
     const [mapViewState, setMapViewState] = useState(mapPresets[mapPresetsIndex].viewState);
 
     return (
-        <MapContainer>
+        <MapContainer {...props}>
             <ControlsContainer>
-                <fieldset>
-                    <legend>Select Mode:</legend>
-                    <label><input name='map-input-mode' type='radio' value='panning' checked={mapInputMode === 'panning'} onChange={(ev) => { setMapInputMode(ev.target.value as 'panning'|'drawing') }} /> Panning</label>
-                    <label><input name='map-input-mode' type='radio' value='drawing' checked={mapInputMode === 'drawing'} onChange={(ev) => { setMapInputMode(ev.target.value as 'panning'|'drawing') }} /> Drawing</label>
-                </fieldset>
+                <RadioSet legend='Select Mode:' options={{panning: ' Panning', drawing: ' Drawing'}} checked={mapInputMode} onChange={(v)=>setMapInputMode(v)} />
                 <label>
                     Load a location:
                     {' '}
@@ -79,17 +68,18 @@ export function MapView({mapInputMode, setMapInputMode}: MapViewProps) {
                     setMapPresetsIndex(mapPresets.length);
                 }}>
                     <label>
-                        Save a bookmark:
+                        Bookmark current location:
                         {' '}
                         <input name='bookmark' type='text' />
                     </label>
-                    <button>Save</button>
+                    <Button>Save</Button>
                 </form>
             </ControlsContainer>
             <Map
                 reuseMaps
                 {...mapViewState}
-                onMove={(ev) => setMapViewState(ev.viewState)}>
+                onMove={(ev) => setMapViewState(ev.viewState)}
+                >
                 <Source id='mapterhorn-dem' type='raster-dem' tiles={['https://tiles.mapterhorn.com/{z}/{x}/{y}.webp']} encoding='terrarium' tileSize={512} attribution='<a href="https://mapterhorn.com/attribution">© Mapterhorn</a>'>
                     <Layer id='hillshade' type='hillshade' paint={{ 'hillshade-method': 'combined' }} />
                 </Source>

@@ -1,4 +1,3 @@
-import './App.css';
 import { useState } from 'react';
 import { Splitter } from './components/Splitter';
 
@@ -9,7 +8,7 @@ function App() {
   const [split, setSplit] = useState(0.5);
 
   /* Map controls */
-  const [mapInputMode, setMapInputMode] = useState('panning');
+  const [mapInputMode, setMapInputMode] = useState<'panning'|'drawing'>('panning');
   
   return (
     <Splitter vertical split={0.8} slot1={
