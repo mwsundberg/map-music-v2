@@ -2,12 +2,32 @@ import { useState } from "react";
 
 import { Layer, Map, Source} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import styled from "styled-components";
 
 interface MapViewProps {
     mapInputMode: 'panning'|'drawing',
     setMapInputMode: (mode: 'panning'|'drawing')=>void
 }
 
+/* Styled divs used in the MapView */
+const ControlsContainer = styled.div`
+    display: flex;
+    gap: 2ch;
+    
+    fieldset {
+        border: none;
+        padding: 0;
+
+        legend {
+            float: left;
+        }
+    }
+`;
+const MapContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+`;
 
 /** Map with controls for a location bookmark system */
 export function MapView({mapInputMode, setMapInputMode}: MapViewProps) {
@@ -24,8 +44,8 @@ export function MapView({mapInputMode, setMapInputMode}: MapViewProps) {
     const [mapViewState, setMapViewState] = useState(mapPresets[mapPresetsIndex].viewState);
 
     return (
-        <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
-            <div className='map-controls'>
+        <MapContainer>
+            <ControlsContainer>
                 <fieldset>
                     <legend>Select Mode:</legend>
                     <label><input name='map-input-mode' type='radio' value='panning' checked={mapInputMode === 'panning'} onChange={(ev) => { setMapInputMode(ev.target.value as 'panning'|'drawing') }} /> Panning</label>
@@ -65,16 +85,16 @@ export function MapView({mapInputMode, setMapInputMode}: MapViewProps) {
                     </label>
                     <button>Save</button>
                 </form>
-            </div>
+            </ControlsContainer>
             <Map
                 reuseMaps
                 {...mapViewState}
                 onMove={(ev) => setMapViewState(ev.viewState)}>
                 <Source id='mapterhorn-dem' type='raster-dem' tiles={['https://tiles.mapterhorn.com/{z}/{x}/{y}.webp']} encoding='terrarium' tileSize={512} attribution='<a href="https://mapterhorn.com/attribution">© Mapterhorn</a>'>
-                    <Layer id='hillshade' type='hillshade' paint={{ 'hillshade-method': 'igor' }} />
+                    <Layer id='hillshade' type='hillshade' paint={{ 'hillshade-method': 'combined' }} />
                 </Source>
             </Map>
-        </div>
+        </MapContainer>
     );
 
 }
