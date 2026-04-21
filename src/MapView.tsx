@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import styled from "styled-components";
 import { RadioSet } from "./components/RadioSet";
 import { Button } from "./components/Button";
+import { Select } from "./components/Select";
 
 interface MapViewProps {
     mapInputMode: 'panning'|'drawing',
@@ -43,16 +44,14 @@ export function MapView({mapInputMode, setMapInputMode, ...props}: MapViewProps)
                 <label>
                     Load a location:
                     {' '}
-                    <select
+                    <Select
                         value={mapPresetsIndex}
-                        onChange={(ev) => {
-                            setMapPresetsIndex(parseInt(ev.target.value));
-                            setMapViewState(mapPresets[parseInt(ev.target.value)].viewState);
+                        options={mapPresets.map((mp)=>mp.name)}
+                        onChange={(val) => {
+                            setMapPresetsIndex(val);
+                            setMapViewState(mapPresets[val].viewState);
                         }}>
-                        {mapPresets.map((mp, i) => (
-                            <option key={mp.name + i} value={i}>{mp.name}</option>
-                        ))}
-                    </select>
+                    </Select>
                 </label>
                 <form onSubmit={(ev) => {
                     /* Using a form for automatic button association, adds some boilerplate */
