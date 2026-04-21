@@ -5,7 +5,7 @@ import { MapView } from './MapView';
 
 function App() {
 
-  const [split, setSplit] = useState(0.5);
+  const [split, setSplit] = useState(0.8);
 
   /* Map controls */
   const [mapInputMode, setMapInputMode] = useState<'panning'|'drawing'>('panning');

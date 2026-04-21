@@ -14,9 +14,9 @@ interface MapViewProps {
 
 /* Styled divs used in the MapView */
 const ControlsContainer = styled.div`
-    display: flex;
-    gap: 1ch;
-    flex-wrap: wrap;
+    & > * {
+        display: inline-block;
+    }
 `;
 const MapContainer = styled.div`
     display: flex;
@@ -42,6 +42,7 @@ export function MapView({mapInputMode, setMapInputMode, ...props}: MapViewProps)
         <MapContainer {...props}>
             <ControlsContainer>
                 <RadioSet legend='Select Mode:' options={{panning: ' Panning', drawing: ' Drawing'}} checked={mapInputMode} onChange={(v)=>setMapInputMode(v)} />
+                {' '}
                 <label>
                     Load a location:
                     {' '}
@@ -54,6 +55,7 @@ export function MapView({mapInputMode, setMapInputMode, ...props}: MapViewProps)
                         }}>
                     </Select>
                 </label>
+                {' '}
                 <form onSubmit={(ev) => {
                     /* Using a form for automatic button association, adds some boilerplate */
                     ev.preventDefault();
