@@ -3,7 +3,14 @@ import { useState } from "react";
 import { Layer, Map, Source} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-export function MapView({mapInputMode='panning', setMapInputMode}) {
+interface MapViewProps {
+    mapInputMode: 'panning'|'drawing',
+    setMapInputMode: (mode: 'panning'|'drawing')=>void
+}
+
+
+/** Map with controls for a location bookmark system */
+export function MapView({mapInputMode, setMapInputMode}: MapViewProps) {
     const [mapPresets, setMapPresets] = useState([
         { name: "Grand Canyon",            viewState: { latitude: 35.8102593, longitude: -113.6302593, zoom: 11 }},
         { name: "Vancouver Mountains",     viewState: { latitude: 49.3822072, longitude: -123.1363749, zoom: 12 }},
@@ -21,8 +28,8 @@ export function MapView({mapInputMode='panning', setMapInputMode}) {
             <div className='map-controls'>
                 <fieldset>
                     <legend>Select Mode:</legend>
-                    <label><input name='map-input-mode' type='radio' value='panning' checked={mapInputMode === 'panning'} onChange={(ev) => { setMapInputMode(ev.target.value) }} /> Panning</label>
-                    <label><input name='map-input-mode' type='radio' value='drawing' checked={mapInputMode === 'drawing'} onChange={(ev) => { setMapInputMode(ev.target.value) }} /> Drawing</label>
+                    <label><input name='map-input-mode' type='radio' value='panning' checked={mapInputMode === 'panning'} onChange={(ev) => { setMapInputMode(ev.target.value as 'panning'|'drawing') }} /> Panning</label>
+                    <label><input name='map-input-mode' type='radio' value='drawing' checked={mapInputMode === 'drawing'} onChange={(ev) => { setMapInputMode(ev.target.value as 'panning'|'drawing') }} /> Drawing</label>
                 </fieldset>
                 <label>
                     Load a location:
