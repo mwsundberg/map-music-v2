@@ -40,6 +40,19 @@ export function MapView({...props}: MapViewProps) {
                 onMove={(ev) => setMapViewState(ev.viewState)}
                 >
                 <Source id='mapterhorn-dem' type='raster-dem' tiles={['https://tiles.mapterhorn.com/{z}/{x}/{y}.webp']} encoding='terrarium' tileSize={512} attribution='<a href="https://mapterhorn.com/attribution">© Mapterhorn</a>'>
+                    <Layer id='color-relief' type='color-relief' paint={{
+                        'color-relief-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['elevation'],
+                            -410, 'hsl(78, 30%, 41%)',
+                            0,    'hsl(70, 32%, 91%)',
+                            2300, 'hsl(60, 64%, 30%)',
+                            3901, 'hsl(47, 97%, 51%)',
+                            5586, 'hsl(17, 87%, 47%)',
+                            8840, 'hsl(343, 90%, 96%)',
+                        ]
+                    }} />
                     <Layer id='hillshade' type='hillshade' paint={{ 'hillshade-method': 'combined' }} />
                 </Source>
             </Map>
