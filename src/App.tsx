@@ -13,7 +13,7 @@ function App() {
   
   return (
     <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
-      <Splitter split={splitHorizontal} setSplit={setSplitHorizontal} gutter='20px' slot1={
+      <Splitter split={splitHorizontal} setSplit={setSplitHorizontal} slot1={
         <MapView mapInputMode={mapInputMode} setMapInputMode={setMapInputMode} />
       } slot2={
         <>

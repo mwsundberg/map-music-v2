@@ -1,99 +1,117 @@
-import { useRef, useState, type ReactNode } from "react"
+import { useRef, useState, type PointerEvent, type PointerEventHandler, type ReactNode } from "react"
 import styled from "styled-components";
 
-interface SplitterProps extends Partial<SplitterStyleProps> {
-    /** Setter for the split property, value in [0,1] range */
-    setSplit?: (value: number)=>void
-
-    /** Left or Top, depending upon `vertical` value */
-    slot1: ReactNode,
-    /** Right or Bottom */
-    slot2: ReactNode,
-}
-interface SplitterStyleProps {
-    /** Defaults to horizontal splitting */
-    vertical: boolean,
-
+type splitConfigsAllowed = {
     /** Percentage split in [0,1] range */
     split: number,
+    setSplit?: (value: number)=>void
+} | {
+    /* Make it so there's never a `setSplit` without a `split` */
+    split?: undefined,
+    setSplit?: undefined
+};
+
+type SplitterProps = splitConfigsAllowed & {
+    /** Defaults to horizontal splitting */
+    vertical?: boolean,
 
     /** Draggable gutter width as a CSS calc value */
-    gutter: string,
+    gutter?: string,
 
-    /** Minimum slot dimensions as a CSS calc value */
-    slot1min: string,
-    slot2min: string,
+    /** Left or Top, depending upon `vertical` value, plus minimum split dimensions as a CSS calc value */
+    slot1: ReactNode,
+    slot1min?: string,
+    /** Right or Bottom */
+    slot2: ReactNode,
+    slot2min?: string,
+};
+
+/* The style related props from above with $ prefixes as to not polute the DOM with attributes */
+interface SplitterStyleProps {
+    $vertical: boolean,
+    $split: number,
+    $gutter: string,
+    $slot1min: string,
+    $slot2min: string,
 }
-
-const WrapperStyled = styled.div<SplitterStyleProps>`
+const WrapperStyled = styled.div.attrs<SplitterStyleProps>((p) => ({
+    /* The magic of the splitter. Everything is driven by the dimensions of the first pane, which is clamped between `slot1min` and `100%-slot2min` */
+    style: {
+        [p.$vertical?'gridTemplateRows':'gridTemplateColumns']:
+            `clamp(calc(${p.$slot1min}),
+                   calc(${p.$split * 100}% - ${p.$gutter} / 2),
+                   calc(100% - ${p.$slot2min}))
+            calc(${p.$gutter})
+            1fr`
+    },
+}))`
     width: 100%;
     height: 100%;
     overflow: hidden;
     display: grid;
-    ${(p) => (p.vertical?'grid-template-rows':'grid-template-columns')}:
-        clamp(calc(${(p) => p.slot1min}),
-              calc(${(p) => (p.split * 100)}% - ${(p)=>p.gutter} / 2),
-              calc(100% - ${(p) => p.slot2min}))
-        calc(${(p) => p.gutter})
-        1fr;
 `;
 
-const GrabberStyled = styled.div<{vertical: boolean, gutter: string}>`
-    z-index: 100;
-    margin: 0 calc(-0.75 * ${(p) => p.gutter});
-    cursor: ${(p) => (p.vertical?'row-resize':'col-resize')};
+const GutterStyled = styled.div<{$vertical: boolean, $gutter: string}>`
+    z-index: 1;
+    margin: 0 calc(-0.75 * ${(p) => p.$gutter});
+    cursor: ${(p) => (p.$vertical?'row-resize':'col-resize')};
 `;
 
-export function Splitter({vertical = false, split, setSplit, gutter = '5px', slot1, slot1min = '0px', slot2, slot2min = '0px'}: SplitterProps) {
-    let middleElement = <GrabberStyled
-        className='gutter' {...{ vertical, gutter }}
-        onPointerMove={(ev) => {
-            /* When the left mouse button is held */
-            if (ev.buttons === 1) {
-                /* Get wrapper dimensions */
-                const wrapperBounds = wrapperRef.current?.getBoundingClientRect();
-                if (wrapperBounds === undefined) return;
-                const [wrapperLower, wrapperUpper] = vertical ? [wrapperBounds.top, wrapperBounds.bottom] : [wrapperBounds.left, wrapperBounds.right];
+const PaneStyled = styled.div`
+    z-index: 0;
+`;
 
-                /* Get mouse location relative */
-                const mouseCoord = vertical ? ev.clientY : ev.clientX;
+export function Splitter({vertical = false, split, setSplit, gutter = '6px', slot1, slot1min = '0px', slot2, slot2min = '0px'}: SplitterProps) {
+    /* The middle element is swapped out for an unstyled variant if the Splitter is fixed */
+    const gutterElementRef = useRef<HTMLDivElement>(null);
+    const grabbingRef = useRef(false);
+    let gutterElement = <GutterStyled ref={gutterElementRef} className='gutter' $vertical={vertical} $gutter={gutter}></GutterStyled>;
 
-                /* Account for dragger width and  */
-                const mousePercent = (mouseCoord - wrapperLower) / (wrapperUpper - wrapperLower);
+    /* Listen for click dragging on the wrapper element that started in the gutter */
+    let onWrapperPointerMove: PointerEventHandler<HTMLDivElement>|undefined = (ev: PointerEvent<HTMLDivElement>) => {
+        if(ev.buttons === 1 && grabbingRef.current) {
+            /* If currently in the middle of a mouse move that started over the grabber element */
+            /* Get wrapper dimensions */
+            const wrapperBounds = ev.currentTarget.getBoundingClientRect();
+            const wrapperLower = vertical? wrapperBounds.top : wrapperBounds.left;
 
-                /* Pass value up the chain */
-                setSplit?.(mousePercent);
-            }
-        }}></GrabberStyled>;
+            /* Get mouse location relative */
+            const mouseCoord = vertical? ev.clientY : ev.clientX;
+            const mousePercent = (mouseCoord - wrapperLower) / ev.currentTarget.offsetWidth;
+
+            /* Pass value up the chain */
+            setSplit?.(mousePercent);
+
+        } else if(ev.buttons === 1 && gutterElementRef.current?.contains(ev.target as Node)) {
+            /* If starting a mouse move */
+            grabbingRef.current = true;
+
+        } else {
+            /* Mouse isn't held down or we aren't starting or continuing a grabber drag */
+            grabbingRef.current = false;
+        }
+    };
+
     /* Completely uncontrolled input */
+    const [uncontrolledSplit, setUncontrolledSplit] = useState(0.5);
     if(split === undefined && setSplit === undefined) {
-        [split, setSplit] = useState(0.5);
+        [split, setSplit] = [uncontrolledSplit, setUncontrolledSplit];
     }
 
     /* Completely static, setSplit does nothing */
     if(split !== undefined && setSplit === undefined) {
-        middleElement = <div></div>;
+        gutterElement = <div></div>;
+        onWrapperPointerMove = undefined;
     }
-
-    /* Nonsense */
-    if(split === undefined && setSplit !== undefined) {
-        throw new Error('Invalid args to Splitter');
-    }
-
-    /* Fallback to cover unset split (not needed since completely uncontrolled and nonsense cases should cover it already) */
-    if(split === undefined) split = 0.5;
-
-    const wrapperRef = useRef(null);
-
     return (
-        <WrapperStyled ref={wrapperRef} {...{vertical, split, gutter, slot1min, slot2min}}>
-            <div>
+        <WrapperStyled $vertical={vertical} $split={split} $gutter={gutter} $slot1min={slot1min} $slot2min={slot2min} onPointerMove={onWrapperPointerMove}>
+            <PaneStyled>
                 {slot1}
-            </div>
-            {middleElement}
-            <div>
+            </PaneStyled>
+            {gutterElement}
+            <PaneStyled>
                 {slot2}
-            </div>
+            </PaneStyled>
         </WrapperStyled>
     );
 }
