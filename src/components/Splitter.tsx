@@ -26,25 +26,7 @@ type SplitterProps = splitConfigsAllowed & {
     slot2min?: string,
 };
 
-/* The style related props from above with $ prefixes as to not polute the DOM with attributes */
-interface SplitterStyleProps {
-    $vertical: boolean,
-    $split: number,
-    $gutter: string,
-    $slot1min: string,
-    $slot2min: string,
-}
-const WrapperStyled = styled.div.attrs<SplitterStyleProps>((p) => ({
-    /* The magic of the splitter. Everything is driven by the dimensions of the first pane, which is clamped between `slot1min` and `100%-slot2min` */
-    style: {
-        [p.$vertical?'gridTemplateRows':'gridTemplateColumns']:
-            `clamp(calc(${p.$slot1min}),
-                   calc(${p.$split * 100}% - ${p.$gutter} / 2),
-                   calc(100% - ${p.$slot2min}))
-            calc(${p.$gutter})
-            1fr`
-    },
-}))`
+const WrapperStyled = styled.div`
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -93,9 +75,9 @@ export function Splitter({vertical = false, split, setSplit, gutter = '6px', slo
     };
 
     /* Completely uncontrolled input */
-    const [uncontrolledSplit, setUncontrolledSplit] = useState(0.5);
-    if(split === undefined && setSplit === undefined) {
-        [split, setSplit] = [uncontrolledSplit, setUncontrolledSplit];
+    const uncontrolledSplitState = useState(0.5);
+    if(split === undefined) { /* the type system guarantees that if `split` is undefined, `setSplit` can only be undefined as well */
+        [split, setSplit] = uncontrolledSplitState;
     }
 
     /* Completely static, setSplit does nothing */
@@ -103,8 +85,19 @@ export function Splitter({vertical = false, split, setSplit, gutter = '6px', slo
         gutterElement = <div></div>;
         onWrapperPointerMove = undefined;
     }
+
+    /* The magic of the splitter. Everything is driven by the dimensions of the first pane, which is clamped between `slot1min` and `100%-slot2min` */
+    const splitterWrapperStyles = {
+        [vertical?'gridTemplateRows':'gridTemplateColumns']:
+            `clamp(calc(${slot1min}),
+                   calc(${split * 100}% - ${gutter} / 2),
+                   calc(100% - ${slot2min}))
+            calc(${gutter})
+            1fr`
+    };
+
     return (
-        <WrapperStyled $vertical={vertical} $split={split} $gutter={gutter} $slot1min={slot1min} $slot2min={slot2min} onPointerMove={onWrapperPointerMove}>
+        <WrapperStyled style={splitterWrapperStyles} onPointerMove={onWrapperPointerMove}>
             <PaneStyled>
                 {slot1}
             </PaneStyled>
