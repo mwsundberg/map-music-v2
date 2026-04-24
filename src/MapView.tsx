@@ -1,19 +1,19 @@
 import { useState } from "react";
-import { Map, useMap, type LngLat, type MapLayerMouseEvent} from 'react-map-gl/maplibre';
+import { Layer, Map, Source, useMap, type LngLat, type MapLayerMouseEvent} from 'react-map-gl/maplibre';
+import type {Feature, FeatureCollection} from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import styled from "styled-components";
 import { MapControls } from "./components/MapControls";
 import { mapPresets, mapStyle } from "./mapConfig";
 
-type LngLatElevation = {
-    lng: number,
-    lat: number,
-    elevation: number
+export type Line = {
+    coordinates: LngLat[],
+    elevations: number[],
 }
 
 interface MapViewProps {
-    lines: LngLatElevation[][],
-    addLine: (line: LngLatElevation[])=>void
+    lines: Line[],
+    addLine: (line: Line)=>void,
 }
 
 
@@ -47,18 +47,33 @@ export function MapView({lines, addLine, ...props}: MapViewProps) {
         mapOnMouseOut = mapOnMouseUp = () => {
             /* Read drawing value to only trigger once */
             if(activeLineDrawing) {
-                const withElevation = activeLine.map((coords) => {
-                    const elevation = map?.queryTerrainElevation(coords)!;
-                    return {lng: coords.lng, lat: coords.lat, elevation};
-                })
+                const elevations = activeLine.map((coords) => map?.queryTerrainElevation(coords)!);
 
-                console.log(withElevation);
-                addLine(withElevation);
+                console.log(elevations);
+                addLine({
+                    coordinates: activeLine,
+                    elevations: elevations,
+                });
             }
 
             setActiveLineDrawing(false);
+            setActiveLine([]);
         }
     }
+
+    /* Convert the lines to GeoJSON for rendering */
+    const linesAsGeoJSON: FeatureCollection = {
+        type: 'FeatureCollection',
+        features: lines.map(({ coordinates }) =>
+            ({type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: coordinates.map(({lng, lat}) => [lng, lat])}})
+        ),
+    }
+    const activeLineAsGeoJSON: Feature = {
+        type: 'Feature',
+        properties: {},
+        geometry: {type: 'LineString', coordinates: activeLine.map(({lng, lat}) => [lng, lat])},
+    }
+    
 
     return (
         <MapContainer {...props}>
@@ -84,6 +99,19 @@ export function MapView({lines, addLine, ...props}: MapViewProps) {
                 onMouseOut={mapOnMouseOut}
                 onMouseUp={mapOnMouseUp}
             >
+                {/* Existing and active lines (converted to GeoJSON and rendered) */}
+                <Source type='geojson' data={linesAsGeoJSON}>
+                    <Layer id='existingLines' type='line' paint={{
+                        'line-color': '#f00',
+                        'line-width': 3
+                    }} />
+                </Source>
+                <Source type='geojson' data={activeLineAsGeoJSON}>
+                    <Layer id='activeLine' type='line' paint={{
+                        'line-color': '#0f0',
+                        'line-width': 3
+                    }} />
+                </Source>
             </Map>
         </MapContainer>
     );

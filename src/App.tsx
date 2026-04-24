@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Splitter } from './components/Splitter';
 
-import { MapView } from './MapView';
+import { MapView, type Line } from './MapView';
 import { MapProvider } from 'react-map-gl/maplibre';
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
   const [splitVertical, setSplitVertical] = useState(0.8);
 
 
-  const [lines, setLines] = useState([]);
+  const [lines, setLines] = useState<Line[]>([]);
   
   return (
     <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
