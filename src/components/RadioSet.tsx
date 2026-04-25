@@ -12,10 +12,13 @@ interface RadioSetProps<T extends string|number> {
 
 const FieldSetStyled = styled.fieldset`
     border: none;
-    min-width: max-content;
+    padding: 7px 0;
+    margin: 0;
+    height: min-content;
 
     legend {
         float: left;
+        padding: 0;
     }
 
     input {
