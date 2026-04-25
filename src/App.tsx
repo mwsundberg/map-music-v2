@@ -8,6 +8,7 @@ import styled from 'styled-components';
 import { LineControls } from './components/LineControls';
 import { LineRenderer } from './components/LineRenderer';
 import { resampleCoords } from './lineResampling';
+import { Button } from './components/Button';
 
 export type ResampleSettings = {
   /** How much to smooth the line, range [0,1] */
@@ -100,10 +101,10 @@ function App() {
   }, [activeLine]);
   
   return (
-    <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
-      <Splitter split={splitHorizontal} setSplit={setSplitHorizontal} slot1={
-        <PanelStyled>
-          <MapProvider>
+    <MapProvider>
+      <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
+        <Splitter split={splitHorizontal} setSplit={setSplitHorizontal} slot1={
+          <PanelStyled>
             <MapView
               lines={lines}
               activeLineId={activeLineId}
@@ -121,21 +122,22 @@ function App() {
                 setLines([...lines, newLine]);
                 setActiveLineId(newLine.id);
               }} />
-          </MapProvider>
-        </PanelStyled>
+          </PanelStyled>
+        } slot2={
+          <PanelStyled>
+            <LineControls {...{activeLine, setActiveLine, resampleSettings, setResampleSettings, musicSettings, setMusicSettings}}/>
+          </PanelStyled>
+        } />
       } slot2={
         <PanelStyled>
-          <LineControls {...{activeLine, setActiveLine, resampleSettings, setResampleSettings, musicSettings, setMusicSettings}}/>
+          Audio scrubbers
+          <ul>
+            {lines.map((l)=>(<li key={l.id}><LineRenderer line={l} /></li>))}
+          </ul>
+          <Button onClick={()=>setActiveLineId(lines[0]?.id)}>Set first line to be active</Button>
         </PanelStyled>
       } />
-    } slot2={
-      <PanelStyled>
-        Audio scrubbers
-        <ul>
-          {lines.map((l)=>(<li key={l.id}><LineRenderer line={l} /></li>))}
-        </ul>
-      </PanelStyled>
-    } />
+    </MapProvider>
   )
 }
 

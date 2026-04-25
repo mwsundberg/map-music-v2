@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Layer, Map, Source, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
+import { Layer, Map, Source, useMap, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import type { Feature } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import styled from 'styled-components';
 import { MapControls } from './components/MapControls';
 import { mapPresets, mapStyle } from './mapConfig';
 import type { Line } from './App';
-import { featureCollection, lineString } from '@turf/turf';
+import { bbox, bboxPolygon, booleanIntersects, featureCollection, lineString } from '@turf/turf';
 
 
 interface MapViewProps {
     lines: Line[],
     addLine: (line: Pick<Line, 'id'|'coordinatesRaw'>)=>void,
     activeLineId: string|undefined,
-    setActiveLineId: (id: string)=>void
+    setActiveLineId: (id: string|undefined)=>void
 }
 
 
@@ -29,15 +29,41 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
     const [mapInputMode, setMapInputMode] = useState<'panning'|'drawing'>('panning');
     const [cursor, setCursor] = useState((mapInputMode === 'drawing')? 'pointer' : undefined);
     const [mapViewState, setMapViewState] = useState(mapPresets[0].viewState);
+    const {default: mapRef} = useMap();
     
     /* Drawing state */
     const [isDrawing, setIsDrawing] = useState(false);
     const [drawnLine, setDrawnLine] = useState<[number, number][]>([]);
 
     /* The cursor should be a pointer in drawing mode */
-    useEffect(() => {
+    useEffect(()=>{
         setCursor((mapInputMode === 'drawing') ? 'pointer' : undefined);
     }, [mapInputMode]);
+
+    /* If the activeLineId is set from an external source, jump to the line */
+    useEffect(()=>{
+        if (activeLineId) {
+            /* Get the active line's bounding box */
+            const activeLine = lines.filter(({id})=>(id === activeLineId))?.[0];
+            const lineBoundsRaw = bbox(activeLine.coordinatesRaw);
+            const lineBounds = bboxPolygon(lineBoundsRaw);
+
+            /* Get the current bounding box */
+            const mapBoundsRaw = mapRef?.getBounds()!;
+            const mapBounds = bboxPolygon([mapBoundsRaw._sw.lng, mapBoundsRaw._sw.lat, mapBoundsRaw._ne.lng, mapBoundsRaw._ne.lat]);
+
+            /* Check for overlap (don't want to unnecessarily zoom about just because something's slightly peeking off the edge) */
+            const onScreen = booleanIntersects(lineBounds, mapBounds);
+
+            /* Zoom the map if fully off screen */
+            if (!onScreen) {
+                mapRef?.fitBounds(
+                    [[lineBoundsRaw[0], lineBoundsRaw[1]], [lineBoundsRaw[2], lineBoundsRaw[3]]],
+                    {padding: 100, duration: 500}
+                )
+            }
+        }
+    }, [activeLineId]);
 
     /* Let listeners be undefined when not in specific mode to prevent unneeded execution */
     let mapOnMouseDown, mapOnMouseMove, mapOnMouseOut, mapOnMouseUp, mapOnClick, mapOnMouseEnter, mapOnMouseLeave;
@@ -73,6 +99,8 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
             const feature = ev.features?.[0];
             if(feature) {
                 setActiveLineId(feature.properties.lineId);
+            } else {
+                setActiveLineId(undefined);
             }
         };
         mapOnMouseEnter = () => setCursor('pointer');
