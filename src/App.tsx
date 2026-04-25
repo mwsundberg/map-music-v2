@@ -21,22 +21,28 @@ function App() {
 
 
   const [lines, setLines] = useState<Line[]>([]);
-  const [activeLine, setActiveLine] = useState<Line|undefined>(undefined);
+  const [activeLineId, setActiveLineId] = useState<string|undefined>(undefined);
   
   return (
     <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
       <Splitter split={splitHorizontal} setSplit={setSplitHorizontal} slot1={
         <PanelStyled>
           <MapProvider>
-            <MapView lines={lines} addLine={(line) => {
-              setLines([...lines, line]);
-              setActiveLine(line);
-            }} />
+            <MapView
+              lines={lines}
+              activeLineId={activeLineId}
+              setActiveLineId={setActiveLineId}
+              addLine={(line) => {
+                setLines([...lines, line]);
+                setActiveLineId(line.id);
+              }} />
           </MapProvider>
         </PanelStyled>
       } slot2={
         <PanelStyled>
           Sidebar controls
+          <code>
+          </code>
         </PanelStyled>
       } />
     } slot2={

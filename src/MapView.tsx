@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Layer, Map, Source, useMap, type LngLat, type MapLayerMouseEvent} from 'react-map-gl/maplibre';
 import type {Feature, FeatureCollection} from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import { MapControls } from "./components/MapControls";
 import { mapPresets, mapStyle } from "./mapConfig";
 
 export type Line = {
+    id: string,
     coordinates: LngLat[],
     elevations: number[],
 }
@@ -14,6 +15,8 @@ export type Line = {
 interface MapViewProps {
     lines: Line[],
     addLine: (line: Line)=>void,
+    activeLineId: string|undefined,
+    setActiveLineId: (id: string)=>void
 }
 
 
@@ -25,53 +28,71 @@ const MapContainer = styled.div`
 `;
 
 /** Map with controls for a location bookmark system */
-export function MapView({lines, addLine, ...props}: MapViewProps) {
+export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props}: MapViewProps) {
     const [mapInputMode, setMapInputMode] = useState<'panning'|'drawing'>('panning');
+    const [cursor, setCursor] = useState((mapInputMode === 'drawing')? 'pointer' : undefined);
     const [mapViewState, setMapViewState] = useState(mapPresets[0].viewState);
     const {default: map} = useMap();
     
     /* Drawing state */
-    const [activeLineDrawing, setActiveLineDrawing] = useState(false);
-    const [activeLine, setActiveLine] = useState<Array<LngLat>>([]);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [drawnLine, setDrawnLine] = useState<Array<LngLat>>([]);
 
-    /* Let listeners be undefined when not in drawing mode to prevent unneeded execution */
-    let mapOnMouseDown, mapOnMouseMove, mapOnMouseOut, mapOnMouseUp;
+    /* The cursor should be a pointer in drawing mode */
+    useEffect(() => {
+        setCursor((mapInputMode === 'drawing') ? 'pointer' : undefined);
+    }, [mapInputMode]);
+
+    /* Let listeners be undefined when not in specific mode to prevent unneeded execution */
+    let mapOnMouseDown, mapOnMouseMove, mapOnMouseOut, mapOnMouseUp, mapOnClick, mapOnMouseEnter, mapOnMouseLeave;
+
+    /* Drawing logic */
     if(mapInputMode === 'drawing') {
         mapOnMouseDown = () => {
-            setActiveLine([]);
-            setActiveLineDrawing(true);
+            setDrawnLine([]);
+            setIsDrawing(true);
         };
         mapOnMouseMove = (ev: MapLayerMouseEvent) => {
-            if(activeLineDrawing) setActiveLine([...activeLine, ev.lngLat]);
+            if(isDrawing) setDrawnLine([...drawnLine, ev.lngLat]);
         };
         mapOnMouseOut = mapOnMouseUp = () => {
             /* Read drawing value to only trigger once */
-            if(activeLineDrawing) {
-                const elevations = activeLine.map((coords) => map?.queryTerrainElevation(coords)!);
-
-                console.log(elevations);
+            if(isDrawing) {
+                const elevations = drawnLine.map((coords) => map?.queryTerrainElevation(coords)!);
                 addLine({
-                    coordinates: activeLine,
+                    id: crypto.randomUUID(),
+                    coordinates: drawnLine,
                     elevations: elevations,
                 });
             }
 
-            setActiveLineDrawing(false);
-            setActiveLine([]);
+            setIsDrawing(false);
+            setDrawnLine([]);
         }
+    }
+    if(mapInputMode === 'panning') {
+        /* Make the lines interactive */
+        mapOnClick = (ev: MapLayerMouseEvent) => {
+            const feature = ev.features?.[0];
+            if(feature) {
+                setActiveLineId(feature.properties.lineId);
+            }
+        };
+        mapOnMouseEnter = () => setCursor('pointer');
+        mapOnMouseLeave = () => setCursor(undefined);
     }
 
     /* Convert the lines to GeoJSON for rendering */
     const linesAsGeoJSON: FeatureCollection = {
         type: 'FeatureCollection',
-        features: lines.map(({ coordinates }) =>
-            ({type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: coordinates.map(({lng, lat}) => [lng, lat])}})
+        features: lines.map(({ id, coordinates }) =>
+            ({type: 'Feature', properties: {lineId: id}, geometry: {type: 'LineString', coordinates: coordinates.map(({lng, lat}) => [lng, lat])}})
         ),
     }
-    const activeLineAsGeoJSON: Feature = {
+    const drawnLineAsGeoJSON: Feature = {
         type: 'Feature',
         properties: {},
-        geometry: {type: 'LineString', coordinates: activeLine.map(({lng, lat}) => [lng, lat])},
+        geometry: {type: 'LineString', coordinates: drawnLine.map(({lng, lat}) => [lng, lat])},
     }
     
 
@@ -93,24 +114,30 @@ export function MapView({lines, addLine, ...props}: MapViewProps) {
                 dragPan={(mapInputMode === 'panning')}
                 dragRotate={(mapInputMode === 'panning')}
 
-                /* Listeners that are activated when in drawing mode */
+                /* Listeners that are activated when in drawing/panning mode and undefined otherwise */
                 onMouseDown={mapOnMouseDown}
                 onMouseMove={mapOnMouseMove}
                 onMouseOut={mapOnMouseOut}
                 onMouseUp={mapOnMouseUp}
+                onClick={mapOnClick}
+                onMouseEnter={mapOnMouseEnter}
+                onMouseLeave={mapOnMouseLeave}
 
-                /* Pointer cursor when drawing */
-                cursor={(mapInputMode === 'drawing')? 'pointer':undefined}
+                /* Cursor is changed to pointer when drawing and hovering over existing lines for selection */
+                cursor={cursor}
+
+                /* The existing lines should be interactive */
+                interactiveLayerIds={['existingLines']}
             >
-                {/* Existing and active lines (converted to GeoJSON and rendered) */}
+                {/* Existing and drawn lines (converted to GeoJSON and rendered) */}
                 <Source type='geojson' data={linesAsGeoJSON}>
                     <Layer id='existingLines' type='line' paint={{
-                        'line-color': '#f00',
+                        'line-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], '#ff0', '#f00'],
                         'line-width': 3
                     }} />
                 </Source>
-                <Source type='geojson' data={activeLineAsGeoJSON}>
-                    <Layer id='activeLine' type='line' paint={{
+                <Source type='geojson' data={drawnLineAsGeoJSON}>
+                    <Layer id='drawnLine' type='line' paint={{
                         'line-color': '#0f0',
                         'line-width': 3
                     }} />
