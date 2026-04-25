@@ -2,18 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Splitter } from './components/Splitter';
 
 import { MapView } from './MapView';
-import { MapProvider, type LngLat } from 'react-map-gl/maplibre';
+import { MapProvider } from 'react-map-gl/maplibre';
+import type { Feature, LineString } from 'geojson';
 import styled from 'styled-components';
 import { LineControls } from './components/LineControls';
 import { LineRenderer } from './components/LineRenderer';
-
-/* Splitter panels & wrapper to give padding */
-const PanelStyled = styled.section`
-  width: 100%;
-  height: 100%;
-  background-color: var(--background);
-  border-radius: 3px;
-`;
+import { resampleCoords } from './lineResampling';
 
 export type ResampleSettings = {
   /** How much to smooth the line, range [0,1] */
@@ -42,9 +36,9 @@ export type Line = {
   name: string|undefined,
 
   /** Raw input coordinates that make up the line, `{lng, lat}` objects */
-  coordinatesRaw: LngLat[],
+  coordinatesRaw: Feature<LineString>,
   /** Resampled into evenly spaced points along the original line, with optional smoothing */
-  coordinatesResampled: LngLat[],
+  coordinatesResampled: Feature<LineString>,
   /** Elevation in meters measured along `coordinatesResampled` */
   elevationsResampled: number[],
 
@@ -54,6 +48,14 @@ export type Line = {
   /** Music generation settings */
   musicSettings: MusicSettings,
 }
+
+/* Splitter panels & wrapper to give padding */
+const PanelStyled = styled.section`
+  width: 100%;
+  height: 100%;
+  background-color: var(--background);
+  border-radius: 3px;
+`;
 
 
 function App() {
@@ -111,7 +113,7 @@ function App() {
                   id: id,
                   coordinatesRaw: coordinatesRaw,
                   name: undefined,
-                  coordinatesResampled: [],
+                  coordinatesResampled: resampleCoords(coordinatesRaw, resampleSettings),
                   elevationsResampled: [],
                   resampleSettings: resampleSettings,
                   musicSettings: musicSettings,

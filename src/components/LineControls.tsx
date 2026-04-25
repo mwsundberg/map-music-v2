@@ -3,6 +3,7 @@ import type { Line, MusicSettings, ResampleSettings } from "../App";
 import { LineRenderer } from "./LineRenderer";
 import { RadioSet } from "./RadioSet";
 import { TextInput } from "./TextInput";
+import { resampleCoords } from "../lineResampling";
 
 interface LineControlsProps {
     activeLine: Line|undefined,
@@ -21,6 +22,8 @@ export function LineControls({activeLine, setActiveLine, resampleSettings, setRe
         setResampleSettingsRaw(value);
         if(activeLine) setActiveLine({
             ...activeLine,
+            /* Apply the resampling */
+            coordinatesResampled: resampleCoords(activeLine.coordinatesRaw, value),
             resampleSettings: value,
             musicSettings: { ...musicSettings },
         });

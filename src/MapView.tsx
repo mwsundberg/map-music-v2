@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { Layer, Map, Source, type LngLat, type MapLayerMouseEvent} from 'react-map-gl/maplibre';
-import type {Feature, FeatureCollection} from 'geojson';
+import { useEffect, useState } from 'react';
+import { Layer, Map, Source, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
+import type { Feature } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import styled from "styled-components";
-import { MapControls } from "./components/MapControls";
-import { mapPresets, mapStyle } from "./mapConfig";
-import type { Line } from "./App";
+import styled from 'styled-components';
+import { MapControls } from './components/MapControls';
+import { mapPresets, mapStyle } from './mapConfig';
+import type { Line } from './App';
+import { featureCollection, lineString } from '@turf/turf';
 
 
 interface MapViewProps {
@@ -31,7 +32,7 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
     
     /* Drawing state */
     const [isDrawing, setIsDrawing] = useState(false);
-    const [drawnLine, setDrawnLine] = useState<Array<LngLat>>([]);
+    const [drawnLine, setDrawnLine] = useState<[number, number][]>([]);
 
     /* The cursor should be a pointer in drawing mode */
     useEffect(() => {
@@ -48,14 +49,17 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
             setIsDrawing(true);
         };
         mapOnMouseMove = (ev: MapLayerMouseEvent) => {
-            if(isDrawing) setDrawnLine([...drawnLine, ev.lngLat]);
+            if(isDrawing) setDrawnLine([...drawnLine, [ev.lngLat.lng, ev.lngLat.lat]]);
         };
         mapOnMouseOut = mapOnMouseUp = () => {
             /* Read drawing value to only trigger once */
             if(isDrawing && drawnLine.length > 2) {
+                const id = crypto.randomUUID();
+
+                /* Convert to GeoJSON for easier turf handling */                
                 addLine({
-                    id: crypto.randomUUID(),
-                    coordinatesRaw: drawnLine
+                    id: id,
+                    coordinatesRaw: lineString(drawnLine, {lineId: id}),
                 });
             }
 
@@ -76,16 +80,12 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
     }
 
     /* Convert the lines to GeoJSON for rendering */
-    const linesAsGeoJSON: FeatureCollection = {
-        type: 'FeatureCollection',
-        features: lines.map(({ id, coordinatesRaw }) =>
-            ({type: 'Feature', properties: {lineId: id}, geometry: {type: 'LineString', coordinates: coordinatesRaw.map(({lng, lat}) => [lng, lat])}})
-        ),
-    }
+    const linesRawAsGeoJSON = featureCollection(lines.map(({ coordinatesRaw }) => coordinatesRaw));
+    const linesResampledAsGeoJSON = featureCollection(lines.map(({ coordinatesResampled }) => coordinatesResampled));
     const drawnLineAsGeoJSON: Feature = {
         type: 'Feature',
         properties: {},
-        geometry: {type: 'LineString', coordinates: drawnLine.map(({lng, lat}) => [lng, lat])},
+        geometry: {type: 'LineString', coordinates: drawnLine},
     }
     
 
@@ -120,11 +120,17 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
                 cursor={cursor}
 
                 /* The existing lines should be interactive */
-                interactiveLayerIds={['existingLines']}
+                interactiveLayerIds={['linesRaw', 'linesResampled']}
             >
                 {/* Existing and drawn lines (converted to GeoJSON and rendered) */}
-                <Source type='geojson' data={linesAsGeoJSON}>
-                    <Layer id='existingLines' type='line' paint={{
+                <Source type='geojson' data={linesRawAsGeoJSON}>
+                    <Layer id='linesRaw' type='line' paint={{
+                        'line-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], '#ff0', '#f00'],
+                        'line-width': 3
+                    }} />
+                </Source>
+                <Source type='geojson' data={linesResampledAsGeoJSON}>
+                    <Layer id='linesResampled' type='line' paint={{
                         'line-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], '#ff0', '#f00'],
                         'line-width': 3
                     }} />
