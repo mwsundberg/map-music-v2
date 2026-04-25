@@ -57,7 +57,7 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
         };
         mapOnMouseOut = mapOnMouseUp = () => {
             /* Read drawing value to only trigger once */
-            if(isDrawing) {
+            if(isDrawing && drawnLine.length > 2) {
                 const elevations = drawnLine.map((coords) => map?.queryTerrainElevation(coords)!);
                 addLine({
                     id: crypto.randomUUID(),
