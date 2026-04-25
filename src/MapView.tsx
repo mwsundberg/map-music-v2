@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Layer, Map, Source, useMap, type LngLat, type MapLayerMouseEvent} from 'react-map-gl/maplibre';
 import type {Feature, FeatureCollection} from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { MapControls } from "./components/MapControls";
 import { mapPresets, mapStyle } from "./mapConfig";
 
@@ -98,6 +98,9 @@ export function MapView({lines, addLine, ...props}: MapViewProps) {
                 onMouseMove={mapOnMouseMove}
                 onMouseOut={mapOnMouseOut}
                 onMouseUp={mapOnMouseUp}
+
+                /* Pointer cursor when drawing */
+                cursor={(mapInputMode === 'drawing')? 'pointer':undefined}
             >
                 {/* Existing and active lines (converted to GeoJSON and rendered) */}
                 <Source type='geojson' data={linesAsGeoJSON}>

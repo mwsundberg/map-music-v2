@@ -36,7 +36,7 @@ const WrapperStyled = styled.div`
 const GutterStyled = styled.div<{$vertical: boolean, $gutter: string}>`
     z-index: 1;
     margin: 0 calc(-0.75 * ${(p) => p.$gutter});
-    cursor: ${(p) => (p.$vertical?'row-resize':'col-resize')};
+    cursor: ${(p) => (p.$vertical?'ns-resize':'ew-resize')};
 `;
 
 const PaneStyled = styled.div`
