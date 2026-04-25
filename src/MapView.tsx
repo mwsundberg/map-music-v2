@@ -1,20 +1,16 @@
 import { useEffect, useState } from "react";
-import { Layer, Map, Source, useMap, type LngLat, type MapLayerMouseEvent} from 'react-map-gl/maplibre';
+import { Layer, Map, Source, type LngLat, type MapLayerMouseEvent} from 'react-map-gl/maplibre';
 import type {Feature, FeatureCollection} from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import styled from "styled-components";
 import { MapControls } from "./components/MapControls";
 import { mapPresets, mapStyle } from "./mapConfig";
+import type { Line } from "./App";
 
-export type Line = {
-    id: string,
-    coordinates: LngLat[],
-    elevations: number[],
-}
 
 interface MapViewProps {
     lines: Line[],
-    addLine: (line: Line)=>void,
+    addLine: (line: Pick<Line, 'id'|'coordinatesRaw'>)=>void,
     activeLineId: string|undefined,
     setActiveLineId: (id: string)=>void
 }
@@ -32,7 +28,6 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
     const [mapInputMode, setMapInputMode] = useState<'panning'|'drawing'>('panning');
     const [cursor, setCursor] = useState((mapInputMode === 'drawing')? 'pointer' : undefined);
     const [mapViewState, setMapViewState] = useState(mapPresets[0].viewState);
-    const {default: map} = useMap();
     
     /* Drawing state */
     const [isDrawing, setIsDrawing] = useState(false);
@@ -58,11 +53,9 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
         mapOnMouseOut = mapOnMouseUp = () => {
             /* Read drawing value to only trigger once */
             if(isDrawing && drawnLine.length > 2) {
-                const elevations = drawnLine.map((coords) => map?.queryTerrainElevation(coords)!);
                 addLine({
                     id: crypto.randomUUID(),
-                    coordinates: drawnLine,
-                    elevations: elevations,
+                    coordinatesRaw: drawnLine
                 });
             }
 
@@ -85,8 +78,8 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
     /* Convert the lines to GeoJSON for rendering */
     const linesAsGeoJSON: FeatureCollection = {
         type: 'FeatureCollection',
-        features: lines.map(({ id, coordinates }) =>
-            ({type: 'Feature', properties: {lineId: id}, geometry: {type: 'LineString', coordinates: coordinates.map(({lng, lat}) => [lng, lat])}})
+        features: lines.map(({ id, coordinatesRaw }) =>
+            ({type: 'Feature', properties: {lineId: id}, geometry: {type: 'LineString', coordinates: coordinatesRaw.map(({lng, lat}) => [lng, lat])}})
         ),
     }
     const drawnLineAsGeoJSON: Feature = {
