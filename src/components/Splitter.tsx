@@ -41,6 +41,7 @@ const GutterStyled = styled.div<{$vertical: boolean, $gutter: string}>`
 
 const PaneStyled = styled.div`
     z-index: 0;
+    overflow: auto;
 `;
 
 export function Splitter({vertical = false, split, setSplit, gutter = '6px', slot1, slot1min = '0px', slot2, slot2min = '0px'}: SplitterProps) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Splitter } from './components/Splitter';
 
 import { MapView, type Line } from './MapView';
@@ -22,6 +22,11 @@ function App() {
 
   const [lines, setLines] = useState<Line[]>([]);
   const [activeLineId, setActiveLineId] = useState<string|undefined>(undefined);
+  const activeLine: Line|undefined = useMemo(() =>
+    lines.filter(
+      ({id}) => (id === activeLineId)
+    )?.[0],
+    [lines, activeLineId]);
   
   return (
     <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
@@ -41,8 +46,9 @@ function App() {
       } slot2={
         <PanelStyled>
           Sidebar controls
-          <code>
-          </code>
+          <p>
+            {JSON.stringify(activeLine)}
+          </p>
         </PanelStyled>
       } />
     } slot2={
