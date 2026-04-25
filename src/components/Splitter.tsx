@@ -59,7 +59,7 @@ export function Splitter({vertical = false, split, setSplit, gutter = '6px', slo
 
             /* Get mouse location relative */
             const mouseCoord = vertical? ev.clientY : ev.clientX;
-            const mousePercent = (mouseCoord - wrapperLower) / ev.currentTarget.offsetWidth;
+            const mousePercent = (mouseCoord - wrapperLower) / (vertical? ev.currentTarget.offsetHeight : ev.currentTarget.offsetWidth);
 
             /* Pass value up the chain */
             setSplit?.(mousePercent);
