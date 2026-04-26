@@ -4,21 +4,23 @@ import { LineRenderer } from "./LineRenderer";
 import { RadioSet } from "./RadioSet";
 import { TextInput } from "./TextInput";
 import { resampleCoords } from "../lineResampling";
+import { Button } from "./Button";
 
 interface LineControlsProps {
     activeLine: Line|undefined,
     setActiveLine: (value: Line)=>void,
+    removeLine: (id: string)=>void,
     resampleSettings: ResampleSettings,
     setResampleSettings: (value: ResampleSettings)=>void,
     musicSettings: MusicSettings,
     setMusicSettings: (value: MusicSettings)=>void,
 }
 
-export function LineControls({activeLine, setActiveLine, resampleSettings, setResampleSettings: setResampleSettingsRaw, musicSettings, setMusicSettings: setMusicSettingsRaw}: LineControlsProps) {
+export function LineControls({activeLine, setActiveLine, removeLine, resampleSettings, setResampleSettings: setResampleSettingsRaw, musicSettings, setMusicSettings: setMusicSettingsRaw}: LineControlsProps) {
     const id = useId();
 
     /* Override the settings setters to also update the active line (if present) */
-    const setResampleSettings = (value: ResampleSettings) => {
+    function setResampleSettings(value: ResampleSettings) {
         setResampleSettingsRaw(value);
         if(activeLine) setActiveLine({
             ...activeLine,
@@ -27,21 +29,27 @@ export function LineControls({activeLine, setActiveLine, resampleSettings, setRe
             resampleSettings: value,
             musicSettings: { ...musicSettings },
         });
-    };
-    const setMusicSettings = (value: MusicSettings) => {
+    }
+    function setMusicSettings(value: MusicSettings) {
         setMusicSettingsRaw(value);
         if(activeLine) setActiveLine({
             ...activeLine,
             resampleSettings: { ...resampleSettings },
             musicSettings: value,
         });
-    };
+    }
 
     /* Needed for inputting a float value */
     const [resampleDistanceValue, setResampleDistanceValue] = useState<string>(resampleSettings.distance.toString());
     return (<>
         <LineRenderer line={activeLine} />
         <section>
+            <Button onClick={()=>{
+                if (activeLine){
+                    removeLine(activeLine?.id);
+                }
+            }}>Remove</Button>
+            <br />
             <label htmlFor={id+'name'}>Name: </label><TextInput id={id+'name'} value={activeLine?.name || ''} onChange={(ev)=>{if(activeLine) setActiveLine({...activeLine, name: ev.target.value})}} />
         </section>
         <section>

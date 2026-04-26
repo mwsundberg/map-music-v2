@@ -148,19 +148,21 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
                 cursor={cursor}
 
                 /* The existing lines should be interactive */
-                interactiveLayerIds={['linesRaw', 'linesResampled']}
+                interactiveLayerIds={['linesRaw', 'lineResampledDots']}
             >
                 {/* Existing and drawn lines (converted to GeoJSON and rendered) */}
                 <Source type='geojson' data={linesRawAsGeoJSON}>
                     <Layer id='linesRaw' type='line' paint={{
-                        'line-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], '#ff0', '#f00'],
-                        'line-width': 3
+                        'line-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], 'rgb(47, 155, 197)', 'rgb(109, 109, 109)'],
+                        'line-width': 3,
                     }} />
                 </Source>
                 <Source type='geojson' data={linesResampledAsGeoJSON}>
-                    <Layer id='linesResampled' type='line' paint={{
-                        'line-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], '#ff0', '#f00'],
-                        'line-width': 3
+                    <Layer id='linesResampledDots' type='circle' paint={{
+                        'circle-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], 'rgb(0, 183, 255)', 'rgb(109, 109, 109)'],
+                        'circle-stroke-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], 'rgb(83, 206, 255)', 'rgb(109, 109, 109)'],
+                        'circle-radius': 4,
+                        'circle-stroke-width': 1,
                     }} />
                 </Source>
                 <Source type='geojson' data={drawnLineAsGeoJSON}>

@@ -88,9 +88,14 @@ function App() {
     [lines, activeLineId]);
   const setActiveLine = (line: Line) =>
     setLines(lines.map((l)=>{
-      if(l.id === activeLineId) return {...line};
+      if(l.id === activeLineId) return line;
       else return l;
     }));
+  const removeLine = (lineId: string) => {
+    if(activeLineId === lineId) setActiveLineId(undefined);
+    setLines(lines.filter(({id})=>(id !== lineId)));
+  }
+
   const makeNewLine = ({id, coordinatesRaw}: Pick<Line, 'id'|'coordinatesRaw'>) => {
     const newLine: Line = {
       id: id,
@@ -126,7 +131,7 @@ function App() {
           </PanelStyled>
         } slot2={
           <PanelStyled>
-            <LineControls {...{activeLine, setActiveLine, resampleSettings, setResampleSettings, musicSettings, setMusicSettings}}/>
+            <LineControls {...{activeLine, setActiveLine, removeLine, resampleSettings, setResampleSettings, musicSettings, setMusicSettings}}/>
           </PanelStyled>
         } />
       } slot2={
