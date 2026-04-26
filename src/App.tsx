@@ -91,6 +91,19 @@ function App() {
       if(l.id === activeLineId) return {...line};
       else return l;
     }));
+  const makeNewLine = ({id, coordinatesRaw}: Pick<Line, 'id'|'coordinatesRaw'>) => {
+    const newLine: Line = {
+      id: id,
+      coordinatesRaw: coordinatesRaw,
+      name: undefined,
+      coordinatesResampled: resampleCoords(coordinatesRaw, resampleSettings),
+      elevationsResampled: [],
+      resampleSettings: resampleSettings,
+      musicSettings: musicSettings,
+    };
+    setLines([...lines, newLine]);
+    setActiveLineId(newLine.id);
+  }
 
   /* Keep settings state reflective of active line */
   useEffect(()=>{
@@ -109,19 +122,7 @@ function App() {
               lines={lines}
               activeLineId={activeLineId}
               setActiveLineId={setActiveLineId}
-              addLine={({id, coordinatesRaw}) => {
-                const newLine: Line = {
-                  id: id,
-                  coordinatesRaw: coordinatesRaw,
-                  name: undefined,
-                  coordinatesResampled: resampleCoords(coordinatesRaw, resampleSettings),
-                  elevationsResampled: [],
-                  resampleSettings: resampleSettings,
-                  musicSettings: musicSettings,
-                };
-                setLines([...lines, newLine]);
-                setActiveLineId(newLine.id);
-              }} />
+              addLine={makeNewLine} />
           </PanelStyled>
         } slot2={
           <PanelStyled>
