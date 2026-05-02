@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Map, Layer, Source, useMap, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
+import { Map, Layer, Source, useMap, type MapLayerMouseEvent, Marker } from 'react-map-gl/maplibre';
 import type { Feature } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { bbox, bboxPolygon, booleanIntersects, featureCollection, lineString } from '@turf/turf';
@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import { MapControls } from './components/MapControls';
 import { mapPresets, mapStyle } from './mapConfig';
 import type { Line } from './App';
+import MapPin from './components/MapPin';
 
 interface MapViewProps {
     lines: Line[],
@@ -156,14 +157,17 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapView
                         'line-width': 3,
                     }} />
                 </Source>
-                <Source type='geojson' data={linesResampledAsGeoJSON}>
-                    <Layer id='linesResampledDots' type='circle' paint={{
-                        'circle-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], 'rgb(0, 183, 255)', 'rgb(109, 109, 109)'],
-                        'circle-stroke-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], 'rgb(83, 206, 255)', 'rgb(109, 109, 109)'],
-                        'circle-radius': 4,
-                        'circle-stroke-width': 1,
-                    }} />
-                </Source>
+                {/* Make markers at each place the elevation is read */}
+                {linesResampledAsGeoJSON.features.map((line, lineIndex)=>{
+                    return line.geometry.coordinates.map(([lng, lat], pointIndex)=>{
+                        return (<Marker 
+                            key={lineIndex+'-'+pointIndex}
+                            longitude={lng}
+                            latitude={lat}>
+                                <MapPin />
+                            </Marker>);
+                    });
+                }).flat()}
                 <Source type='geojson' data={drawnLineAsGeoJSON}>
                     <Layer id='drawnLine' type='line' paint={{
                         'line-color': 'rgb(83, 206, 255)',
