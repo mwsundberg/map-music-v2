@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Layer, Source, useMap, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
+import { Map, Layer, Source, useMap, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import type { Feature } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { bbox, bboxPolygon, booleanIntersects, featureCollection, lineString } from '@turf/turf';
 import styled from 'styled-components';
 import { MapControls } from './components/MapControls';
-import { mapPresets } from './mapConfig';
+import { mapPresets, mapStyle } from './mapConfig';
 import type { Line } from './App';
-import { MapStyled } from './components/MapStyled';
-
 
 interface MapViewProps {
     lines: Line[],
@@ -121,9 +119,12 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapView
     return (
         <MapContainer>
             <MapControls {...{mapInputMode, setMapInputMode, mapViewState, setMapViewState}} presets={mapPresets} />
-            <MapStyled
+            <Map
                 /* Don't instantiate a new map on each component load */
                 reuseMaps
+
+                /* The actual map styles */
+                mapStyle={mapStyle}
 
                 /* React flavored movement of the map */
                 {...mapViewState}
@@ -169,7 +170,7 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapView
                         'line-width': 3
                     }} />
                 </Source>
-            </MapStyled>
+            </Map>
         </MapContainer>
     );
 }
