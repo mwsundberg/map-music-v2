@@ -157,8 +157,8 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapView
                 </Source>
                 <Source type='geojson' data={linesResampledAsGeoJSON}>
                     <Layer id='linesResampled' beforeId='drawnLine' type='circle' paint={{
-                        'circle-radius': 5,
-                        'circle-color': ['match', ['get', 'lineId'], activeLineId || '', 'rgb(61, 169, 212)', 'rgb(129, 129, 129)'],
+                        'circle-radius': 6,
+                        'circle-color': ['match', ['get', 'lineId'], activeLineId || '', 'rgb(94, 187, 224)', 'rgb(129, 129, 129)'],
                     }} />
                 </Source>
                 <Source type='geojson' data={linesRawAsGeoJSON}>

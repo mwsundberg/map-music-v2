@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Splitter } from './components/Splitter';
 
 import { MapView } from './MapView';
-import type { Feature, LineString } from 'geojson';
+import type { Feature, LineString, MultiPoint } from 'geojson';
 import styled from 'styled-components';
 import { LineControls } from './components/LineControls';
 import { LineRenderer } from './components/LineRenderer';
@@ -39,7 +39,7 @@ export type Line = {
   /** Raw input coordinates that make up the line, `{lng, lat}` objects */
   coordinatesRaw: Feature<LineString>,
   /** Resampled into evenly spaced points along the original line, with optional smoothing */
-  coordinatesResampled: Feature<LineString>,
+  coordinatesResampled: Feature<MultiPoint>,
   /** Elevation in meters measured along `coordinatesResampled` */
   elevationsResampled: number[],
 

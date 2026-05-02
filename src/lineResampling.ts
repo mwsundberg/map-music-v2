@@ -1,8 +1,8 @@
-import type { Feature, LineString } from 'geojson';
+import type { Feature, LineString, MultiPoint } from 'geojson';
 import type { ResampleSettings } from './App';
-import { length, lineChunk, lineString } from '@turf/turf';
+import { length, lineChunk, multiPoint } from '@turf/turf';
 
-export function resampleCoords(coords: Feature<LineString>, {smoothingFactor, mode, count: sampleCount, distance: gapDistance, units}: ResampleSettings): Feature<LineString> {
+export function resampleCoords(coords: Feature<LineString>, {smoothingFactor, mode, count: sampleCount, distance: gapDistance, units}: ResampleSettings): Feature<MultiPoint> {
     /* Smoothing */
     /* TODO */
 
@@ -19,7 +19,7 @@ export function resampleCoords(coords: Feature<LineString>, {smoothingFactor, mo
     const startCoords = chunks.features.map(({geometry: {coordinates: lineArray}})=>(lineArray[0]));
     const lastSegment = chunks.features[chunks.features.length - 1].geometry.coordinates;
     
-    /* Make a new LineString, passing along the properties if needed */
-    return lineString([...startCoords, lastSegment[lastSegment.length - 1]], coords.properties);
+    /* Make a new MultiPoint collection, passing along the properties if needed */
+    return multiPoint([...startCoords, lastSegment[lastSegment.length - 1]], coords.properties);
 }
 
