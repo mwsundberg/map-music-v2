@@ -6,6 +6,6 @@ interface LineRendererProps {
 
 export function LineRenderer({line}: LineRendererProps) {
     return (
-        <div>Line Render: {line?.elevationsResampled.join(', ')}</div>
+        <div>Line Render: {line?.elevations.join(', ')}</div>
     )
 }

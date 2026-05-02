@@ -6,8 +6,10 @@ import type { Feature, LineString, MultiPoint } from 'geojson';
 import styled from 'styled-components';
 import { LineControls } from './components/LineControls';
 import { LineRenderer } from './components/LineRenderer';
-import { resampleCoords } from './lineResampling';
+import { getElevations, resampleCoords } from './lineResampling';
 import { Button } from './components/Button';
+import { playLine } from './audioGeneration';
+import { useMap, type MapRef } from 'react-map-gl/maplibre';
 
 export type ResampleSettings = {
   /** How much to smooth the line, range [0,1] */
@@ -41,7 +43,7 @@ export type Line = {
   /** Resampled into evenly spaced points along the original line, with optional smoothing */
   coordinatesResampled: Feature<MultiPoint>,
   /** Elevation in meters measured along `coordinatesResampled` */
-  elevationsResampled: number[],
+  elevations: number[],
 
   /** Resampling settings */
   resampleSettings: ResampleSettings,
@@ -60,6 +62,8 @@ const PanelStyled = styled.section`
 
 
 function App() {
+  /* Map instance is needed to get elevations from */
+  const {default: mapRef} = useMap();
 
   const [splitHorizontal, setSplitHorizontal] = useState(0.8);
   const [splitVertical, setSplitVertical] = useState(0.8);
@@ -68,7 +72,7 @@ function App() {
   const [livePreview, setLivePreview] = useState(true);
   const [resampleSettings, setResampleSettings] = useState<ResampleSettings>({
     smoothingFactor: 0.25,
-    mode: 'count',
+    mode: 'distance',
     count: 50,
     distance: 500,
     units: 'meters',
@@ -99,17 +103,22 @@ function App() {
   }
 
   const makeNewLine = ({id, coordinatesRaw}: Pick<Line, 'id'|'coordinatesRaw'>) => {
+    const coordinatesResampled = resampleCoords(coordinatesRaw, resampleSettings);
+    const elevations = getElevations(mapRef as MapRef, coordinatesResampled);
     const newLine: Line = {
       id: id,
       coordinatesRaw: coordinatesRaw,
       name: undefined,
-      coordinatesResampled: resampleCoords(coordinatesRaw, resampleSettings),
-      elevationsResampled: [],
+      coordinatesResampled: coordinatesResampled,
+      elevations: elevations,
       resampleSettings: resampleSettings,
       musicSettings: musicSettings,
     };
     setLines([...lines, newLine]);
     setActiveLineId(newLine.id);
+
+    /* Play the audio for the line */
+    if(livePreview) playLine(newLine);
   }
 
   /* Keep settings state reflective of active line. Listening for `activeLineId` changes so settings changes don't trigger an infinite loop */
@@ -119,12 +128,6 @@ function App() {
       setMusicSettings(activeLine.musicSettings);
     }
   }, [activeLineId]);
-
-  useEffect(()=>{
-      if(activeLine && livePreview) {
-        /* Play music */
-      }
-  }, [activeLine]);
   
   return (
     <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
