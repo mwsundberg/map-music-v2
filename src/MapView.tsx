@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Layer, Map, Source, useMap, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
+import { Layer, Source, useMap, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import type { Feature } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { bbox, bboxPolygon, booleanIntersects, featureCollection, lineString } from '@turf/turf';
 import styled from 'styled-components';
 import { MapControls } from './components/MapControls';
-import { mapPresets, mapStyle } from './mapConfig';
+import { mapPresets } from './mapConfig';
 import type { Line } from './App';
-import { bbox, bboxPolygon, booleanIntersects, featureCollection, lineString } from '@turf/turf';
+import { MapStyled } from './components/MapStyled';
 
 
 interface MapViewProps {
@@ -25,7 +26,7 @@ const MapContainer = styled.div`
 `;
 
 /** Map with controls for a location bookmark system */
-export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props}: MapViewProps) {
+export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapViewProps) {
     const [mapInputMode, setMapInputMode] = useState<'panning'|'drawing'>('panning');
     const [cursor, setCursor] = useState((mapInputMode === 'drawing')? 'pointer' : undefined);
     const [mapViewState, setMapViewState] = useState(mapPresets[0].viewState);
@@ -118,14 +119,11 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
     
 
     return (
-        <MapContainer {...props}>
+        <MapContainer>
             <MapControls {...{mapInputMode, setMapInputMode, mapViewState, setMapViewState}} presets={mapPresets} />
-            <Map
+            <MapStyled
                 /* Don't instantiate a new map on each component load */
                 reuseMaps
-
-                /* The actual map configuration */
-                mapStyle={mapStyle}
 
                 /* React flavored movement of the map */
                 {...mapViewState}
@@ -167,11 +165,11 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId, ...props
                 </Source>
                 <Source type='geojson' data={drawnLineAsGeoJSON}>
                     <Layer id='drawnLine' type='line' paint={{
-                        'line-color': '#0f0',
+                        'line-color': 'rgb(83, 206, 255)',
                         'line-width': 3
                     }} />
                 </Source>
-            </Map>
+            </MapStyled>
         </MapContainer>
     );
 }

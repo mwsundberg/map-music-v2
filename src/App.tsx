@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Splitter } from './components/Splitter';
 
 import { MapView } from './MapView';
-import { MapProvider } from 'react-map-gl/maplibre';
 import type { Feature, LineString } from 'geojson';
 import styled from 'styled-components';
 import { LineControls } from './components/LineControls';
@@ -65,6 +64,7 @@ function App() {
   const [splitVertical, setSplitVertical] = useState(0.8);
 
   /* Settings state */
+  const [livePreview, setLivePreview] = useState(true);
   const [resampleSettings, setResampleSettings] = useState<ResampleSettings>({
     smoothingFactor: 0.25,
     mode: 'count',
@@ -110,40 +110,44 @@ function App() {
     setActiveLineId(newLine.id);
   }
 
-  /* Keep settings state reflective of active line */
+  /* Keep settings state reflective of active line. Listening for `activeLineId` changes so settings changes don't trigger an infinite loop */
   useEffect(()=>{
     if(activeLine) {
       setResampleSettings(activeLine.resampleSettings);
       setMusicSettings(activeLine.musicSettings);
     }
+  }, [activeLineId]);
+
+  useEffect(()=>{
+      if(activeLine && livePreview) {
+        /* Play music */
+      }
   }, [activeLine]);
   
   return (
-    <MapProvider>
-      <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
-        <Splitter split={splitHorizontal} setSplit={setSplitHorizontal} slot1={
-          <PanelStyled>
-            <MapView
-              lines={lines}
-              activeLineId={activeLineId}
-              setActiveLineId={setActiveLineId}
-              addLine={makeNewLine} />
-          </PanelStyled>
-        } slot2={
-          <PanelStyled>
-            <LineControls {...{activeLine, setActiveLine, removeLine, resampleSettings, setResampleSettings, musicSettings, setMusicSettings}}/>
-          </PanelStyled>
-        } />
+    <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
+      <Splitter split={splitHorizontal} setSplit={setSplitHorizontal} slot1={
+        <PanelStyled>
+          <MapView
+            lines={lines}
+            activeLineId={activeLineId}
+            setActiveLineId={setActiveLineId}
+            addLine={makeNewLine} />
+        </PanelStyled>
       } slot2={
         <PanelStyled>
-          Audio scrubbers
-          <ul>
-            {lines.map((l)=>(<li key={l.id}><LineRenderer line={l} /></li>))}
-          </ul>
-          <Button onClick={()=>setActiveLineId(lines[0]?.id)}>Set first line to be active</Button>
+          <LineControls {...{activeLine, setActiveLine, removeLine, livePreview, setLivePreview, resampleSettings, setResampleSettings, musicSettings, setMusicSettings}}/>
         </PanelStyled>
       } />
-    </MapProvider>
+    } slot2={
+      <PanelStyled>
+        Audio scrubbers
+        <ul>
+          {lines.map((l)=>(<li key={l.id}><LineRenderer line={l} /></li>))}
+        </ul>
+        <Button onClick={()=>setActiveLineId(lines[0]?.id)}>Set first line to be active</Button>
+      </PanelStyled>
+    } />
   )
 }
 
