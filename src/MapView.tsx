@@ -7,7 +7,7 @@ import styled from 'styled-components';
 import { MapControls } from './components/MapControls';
 import { mapPresets, mapStyle } from './mapConfig';
 import type { Line } from './App';
-import MapPin from './components/MapPin';
+import MapPinCircle from './components/MapMarkerCircle';
 
 interface MapViewProps {
     lines: Line[],
@@ -66,7 +66,7 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapView
     }, [activeLineId]);
 
     /* Let listeners be undefined when not in specific mode to prevent unneeded execution */
-    let mapOnMouseDown, mapOnMouseMove, mapOnMouseOut, mapOnMouseUp, mapOnClick, mapOnMouseEnter, mapOnMouseLeave;
+    let mapOnMouseDown, mapOnMouseMove, mapOnMouseOut, mapOnMouseUp;
 
     /* Drawing logic */
     if(mapInputMode === 'drawing') {
@@ -93,19 +93,19 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapView
             setDrawnLine([]);
         }
     }
-    if(mapInputMode === 'panning') {
-        /* Make the lines interactive */
-        mapOnClick = (ev: MapLayerMouseEvent) => {
-            const feature = ev.features?.[0];
-            if(feature) {
-                setActiveLineId(feature.properties.lineId);
-            } else {
-                setActiveLineId(undefined);
-            }
-        };
-        mapOnMouseEnter = () => setCursor('pointer');
-        mapOnMouseLeave = () => setCursor(undefined);
-    }
+
+    /* Make the lines interactive for selection as active line */
+    const mapOnClick = (ev: MapLayerMouseEvent) => {
+        console.log(ev)
+        const feature = ev.features?.[0];
+        if (feature) {
+            setActiveLineId(feature.properties.lineId);
+        } else {
+            setActiveLineId(undefined);
+        }
+    };
+    const mapOnMouseEnter = () => setCursor('pointer');
+    const mapOnMouseLeave = () => setCursor((mapInputMode === 'drawing')? 'pointer' : undefined);
 
     /* Convert the lines to GeoJSON for rendering */
     const linesRawAsGeoJSON = featureCollection(lines.map(({ coordinatesRaw }) => coordinatesRaw));
@@ -148,30 +148,32 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapView
                 cursor={cursor}
 
                 /* The existing lines should be interactive */
-                interactiveLayerIds={['linesRaw', 'lineResampledDots']}
+                interactiveLayerIds={['linesRaw']}
             >
                 {/* Existing and drawn lines (converted to GeoJSON and rendered) */}
                 <Source type='geojson' data={linesRawAsGeoJSON}>
                     <Layer id='linesRaw' type='line' paint={{
-                        'line-color': ['case', ['==', ['get', 'lineId'], activeLineId || ''], 'rgb(47, 155, 197)', 'rgb(109, 109, 109)'],
-                        'line-width': 3,
+                        'line-color': ['match', ['get', 'lineId'], activeLineId || '', 'rgb(47, 155, 197)', 'rgb(109, 109, 109)'],
+                        'line-width': 4,
                     }} />
                 </Source>
                 {/* Make markers at each place the elevation is read */}
                 {linesResampledAsGeoJSON.features.map((line, lineIndex)=>{
+                    const isActiveLine = line.properties?.lineId === activeLineId;
                     return line.geometry.coordinates.map(([lng, lat], pointIndex)=>{
                         return (<Marker 
                             key={lineIndex+'-'+pointIndex}
                             longitude={lng}
-                            latitude={lat}>
-                                <MapPin />
+                            latitude={lat}
+                            anchor='center'>
+                                <MapPinCircle size={6} color={isActiveLine? 'rgb(85, 180, 218)':'rgb(129, 129, 129)'}/>
                             </Marker>);
                     });
                 }).flat()}
                 <Source type='geojson' data={drawnLineAsGeoJSON}>
                     <Layer id='drawnLine' type='line' paint={{
                         'line-color': 'rgb(83, 206, 255)',
-                        'line-width': 3
+                        'line-width': 5,
                     }} />
                 </Source>
             </Map>
