@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Map, Layer, Source, useMap, type MapLayerMouseEvent, Marker } from 'react-map-gl/maplibre';
+import { Map, Layer, Source, useMap, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import type { Feature } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { bbox, bboxPolygon, booleanIntersects, featureCollection, lineString } from '@turf/turf';
@@ -7,7 +7,6 @@ import styled from 'styled-components';
 import { MapControls } from './components/MapControls';
 import { mapPresets, mapStyle } from './mapConfig';
 import type { Line } from './App';
-import MapPinCircle from './components/MapMarkerCircle';
 
 interface MapViewProps {
     lines: Line[],
@@ -96,7 +95,6 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapView
 
     /* Make the lines interactive for selection as active line */
     const mapOnClick = (ev: MapLayerMouseEvent) => {
-        console.log(ev)
         const feature = ev.features?.[0];
         if (feature) {
             setActiveLineId(feature.properties.lineId);
@@ -148,32 +146,25 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapView
                 cursor={cursor}
 
                 /* The existing lines should be interactive */
-                interactiveLayerIds={['linesRaw']}
+                interactiveLayerIds={['linesRaw', 'linesResampled']}
             >
                 {/* Existing and drawn lines (converted to GeoJSON and rendered) */}
-                <Source type='geojson' data={linesRawAsGeoJSON}>
-                    <Layer id='linesRaw' type='line' paint={{
-                        'line-color': ['match', ['get', 'lineId'], activeLineId || '', 'rgb(47, 155, 197)', 'rgb(109, 109, 109)'],
-                        'line-width': 4,
-                    }} />
-                </Source>
-                {/* Make markers at each place the elevation is read */}
-                {linesResampledAsGeoJSON.features.map((line, lineIndex)=>{
-                    const isActiveLine = line.properties?.lineId === activeLineId;
-                    return line.geometry.coordinates.map(([lng, lat], pointIndex)=>{
-                        return (<Marker 
-                            key={lineIndex+'-'+pointIndex}
-                            longitude={lng}
-                            latitude={lat}
-                            anchor='center'>
-                                <MapPinCircle size={6} color={isActiveLine? 'rgb(85, 180, 218)':'rgb(129, 129, 129)'}/>
-                            </Marker>);
-                    });
-                }).flat()}
                 <Source type='geojson' data={drawnLineAsGeoJSON}>
                     <Layer id='drawnLine' type='line' paint={{
                         'line-color': 'rgb(83, 206, 255)',
                         'line-width': 5,
+                    }} />
+                </Source>
+                <Source type='geojson' data={linesResampledAsGeoJSON}>
+                    <Layer id='linesResampled' beforeId='drawnLine' type='circle' paint={{
+                        'circle-radius': 5,
+                        'circle-color': ['match', ['get', 'lineId'], activeLineId || '', 'rgb(61, 169, 212)', 'rgb(129, 129, 129)'],
+                    }} />
+                </Source>
+                <Source type='geojson' data={linesRawAsGeoJSON}>
+                    <Layer id='linesRaw' beforeId='linesResampled' type='line' paint={{
+                        'line-color': ['match', ['get', 'lineId'], activeLineId || '', 'rgb(47, 155, 197)', 'rgb(109, 109, 109)'],
+                        'line-width': 4,
                     }} />
                 </Source>
             </Map>
