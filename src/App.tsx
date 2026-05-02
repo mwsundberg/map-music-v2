@@ -15,8 +15,9 @@ export type ResampleSettings = {
   mode: 'count'|'distance',
   /** The number of coordinates to resample to (ignored if resampling by distance) */
   count: number,
-  /** The distance in meters to resample by (ignored if resampling by count) */
+  /** The distance and unit used to resample along (ignored if resampling by count) */
   distance: number,
+  units: 'meters'|'kilometers'|'feet'|'miles',
 }
 
 export type MusicSettings = {
@@ -69,7 +70,8 @@ function App() {
     smoothingFactor: 0.25,
     mode: 'count',
     count: 50,
-    distance: 1,
+    distance: 500,
+    units: 'meters',
   });
   const [musicSettings, setMusicSettings] = useState<MusicSettings>({
     synth: 'classic',

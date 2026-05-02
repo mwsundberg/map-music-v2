@@ -24,7 +24,7 @@ export function MapControls({mapInputMode, setMapInputMode, mapViewState, setMap
     const [mapPresetsIndex, setMapPresetsIndex] = useState(0);
     
     return (<ControlsContainer>
-        <RadioSet legend='Select Mode:' options={{panning: ' Panning', drawing: ' Drawing'}} checked={mapInputMode} onChange={(v)=>setMapInputMode(v)} />
+        <RadioSet legend='Select Mode:' options={{panning: '🖐️ Panning', drawing: '✒️ Drawing'}} checked={mapInputMode} onChange={(v)=>setMapInputMode(v)} />
         {' '}
         <label>
             Load a location:

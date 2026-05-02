@@ -2,17 +2,18 @@ import type { Feature, LineString } from 'geojson';
 import type { ResampleSettings } from './App';
 import { length, lineChunk, lineString } from '@turf/turf';
 
-export function resampleCoords(coords: Feature<LineString>, {smoothingFactor, mode, count: sampleCount, distance: gapDistance}: ResampleSettings): Feature<LineString> {
+export function resampleCoords(coords: Feature<LineString>, {smoothingFactor, mode, count: sampleCount, distance: gapDistance, units}: ResampleSettings): Feature<LineString> {
     /* Smoothing */
     /* TODO */
 
     /* Get the length equivalent to divide by to get an even number of chunks */
     if(mode === 'count') {
-        gapDistance = length(coords, {units: 'meters'}) / sampleCount;
+        if (isNaN(sampleCount) || sampleCount < 2) sampleCount = 2;
+        gapDistance = length(coords, {units: units}) / (sampleCount - 1);
     }
 
     /* Divide the line into segments of the given length */
-    const chunks = lineChunk(coords, gapDistance, {units: 'meters'});
+    const chunks = lineChunk(coords, gapDistance, {units: units});
 
     /* Convert the line chunks into a line of its own */
     const startCoords = chunks.features.map(({geometry: {coordinates: lineArray}})=>(lineArray[0]));
