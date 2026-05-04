@@ -11,14 +11,14 @@ export const mapPresets = [
     {name: "Appalachian Mountains",   viewState: {latitude: 37.0133000, longitude: -81.48799896, zoom: 11}},
 ];
 
-/** Elevation coloring definitions */
+/** Elevation coloring definitions (needs to be defined in integer rgb, otherwise we'd need to parse css colors (which is a pain) in the elevation color evaluator) */
 export const elevationColorMap = {
-    [-410]: 'hsl(78, 30%, 41%)',
-    [   0]: 'hsl(70, 32%, 91%)',
-    [2300]: 'hsl(60, 64%, 30%)',
-    [3901]: 'hsl(47, 97%, 51%)',
-    [5586]: 'hsl(17, 87%, 47%)',
-    [8840]: 'hsl(343, 90%, 96%)',
+    [-410]: 'rgb(117, 136, 73)',
+    [   0]: 'rgb(237, 239, 225)',
+    [2300]: 'rgb(125, 125, 28)',
+    [3901]: 'rgb(251, 199, 9)',
+    [5586]: 'rgb(224, 75, 16)',
+    [8840]: 'rgb(254, 236, 241)',
 }
 
 /* Maplibre style */
