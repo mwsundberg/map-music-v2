@@ -1,7 +1,7 @@
 import { elevationColorMap } from './mapConfig';
 
 /** Interpolate a color for a given elevation */
-export function elevationColor(elevation: number): string {
+export default function elevationColor(elevation: number): string {
     const elevationColorMapKeys = Object.keys(elevationColorMap).map((k)=>parseInt(k));
 
     /* Get the range of the elevation color map */

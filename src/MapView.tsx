@@ -4,7 +4,7 @@ import type { Feature } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { bbox, bboxPolygon, booleanIntersects, featureCollection, lineString } from '@turf/turf';
 import styled from 'styled-components';
-import { MapControls } from './components/MapControls';
+import MapControls from './components/MapControls';
 import { mapPresets, mapStyle } from './mapConfig';
 import type { Line } from './App';
 

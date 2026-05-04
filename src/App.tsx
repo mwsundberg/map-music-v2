@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Splitter } from './components/Splitter';
+import Splitter from './components/Splitter';
 
 import { MapView } from './MapView';
 import type { Feature, LineString, MultiPoint } from 'geojson';
 import styled from 'styled-components';
-import { LineControls } from './components/LineControls';
-import { LineRenderer } from './components/LineRenderer';
+import LineControls from './components/LineControls';
+import LineRenderer from './components/LineRenderer';
 import { getElevations, resampleCoords } from './lineResampling';
-import { Button } from './components/Button';
+import Button from './components/Button';
 import { playLine } from './audioGeneration';
 import { useMap, type MapRef } from 'react-map-gl/maplibre';
 

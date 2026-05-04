@@ -22,4 +22,5 @@ export const buttonStyles = css`
     }
 `;
 
-export const Button = styled.button`${buttonStyles}`;
+const Button = styled.button`${buttonStyles}`;
+export default Button;

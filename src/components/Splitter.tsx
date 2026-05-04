@@ -44,7 +44,7 @@ const PaneStyled = styled.div`
     overflow: auto;
 `;
 
-export function Splitter({vertical = false, split, setSplit, gutter = '6px', slot1, slot1min = '0px', slot2, slot2min = '0px'}: SplitterProps) {
+export default function Splitter({vertical = false, split, setSplit, gutter = '6px', slot1, slot1min = '0px', slot2, slot2min = '0px'}: SplitterProps) {
     /* The middle element is swapped out for an unstyled variant if the Splitter is fixed */
     const gutterElementRef = useRef<HTMLDivElement>(null);
     const grabbingRef = useRef(false);

@@ -1,8 +1,8 @@
 import styled from 'styled-components';
-import { RadioSet } from './RadioSet';
-import { Select } from './Select';
-import { Button } from './Button';
-import { TextInput } from './TextInput';
+import RadioSet from './RadioSet';
+import Select from './Select';
+import Button from './Button';
+import TextInput from './TextInput';
 import { useState } from 'react';
 
 interface MapControlsProps {
@@ -19,7 +19,7 @@ const ControlsContainer = styled.div`
     }
 `;
 
-export function MapControls({mapInputMode, setMapInputMode, mapViewState, setMapViewState, presets}: MapControlsProps) {
+export default function MapControls({mapInputMode, setMapInputMode, mapViewState, setMapViewState, presets}: MapControlsProps) {
     const [mapPresets, setMapPresets] = useState(presets);
     const [mapPresetsIndex, setMapPresetsIndex] = useState(0);
     

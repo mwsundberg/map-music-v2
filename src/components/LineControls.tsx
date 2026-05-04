@@ -1,11 +1,11 @@
 import { useId, useState } from "react";
 import type { Line, MusicSettings, ResampleSettings } from "../App";
-import { LineRenderer } from "./LineRenderer";
-import { RadioSet } from "./RadioSet";
-import { TextInput } from "./TextInput";
+import LineRenderer from "./LineRenderer";
+import RadioSet from "./RadioSet";
+import TextInput from "./TextInput";
 import { getElevations, resampleCoords } from "../lineResampling";
-import { Button } from "./Button";
-import { Select } from "./Select";
+import Button from "./Button";
+import Select from "./Select";
 import { playLine } from "../audioGeneration";
 import styled from "styled-components";
 import { useMap } from "react-map-gl/maplibre";
@@ -26,7 +26,7 @@ const SettingsWrapperStyled = styled.div`
     padding: 1ch;
 `;
 
-export function LineControls({activeLine, setActiveLine, removeLine, livePreview, setLivePreview, resampleSettings, setResampleSettings: setResampleSettingsRaw, musicSettings, setMusicSettings: setMusicSettingsRaw}: LineControlsProps) {
+export default function LineControls({activeLine, setActiveLine, removeLine, livePreview, setLivePreview, resampleSettings, setResampleSettings: setResampleSettingsRaw, musicSettings, setMusicSettings: setMusicSettingsRaw}: LineControlsProps) {
     const id = useId();
 
     /* Need map ref for resampling the elevations */

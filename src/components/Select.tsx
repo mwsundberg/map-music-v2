@@ -22,7 +22,7 @@ const OptionStyled = styled.option`
     background-color: var(--background);
 `;
 
-export function Select<T extends string|number>({value, options, onChange}: SelectProps<T>) {
+export default function Select<T extends string|number>({value, options, onChange}: SelectProps<T>) {
     return (
         <SelectStyled
             value={value}

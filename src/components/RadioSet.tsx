@@ -50,7 +50,7 @@ const FieldSetStyled = styled.fieldset`
     }
 `;
 
-export function RadioSet<T extends string|number>({legend, name, options, checked, onChange}: RadioSetProps<T>) {
+export default function RadioSet<T extends string|number>({legend, name, options, checked, onChange}: RadioSetProps<T>) {
     const id = useId();
     name = name ?? id;
 
