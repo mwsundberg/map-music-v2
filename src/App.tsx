@@ -55,7 +55,7 @@ export type Line = {
 /* Splitter panels & wrapper to give padding */
 const PanelStyled = styled.section`
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   background-color: var(--background);
   border-radius: 3px;
 `;
@@ -132,7 +132,7 @@ function App() {
   return (
     <Splitter vertical split={splitVertical} setSplit={setSplitVertical} slot1={
       <Splitter split={splitHorizontal} setSplit={setSplitHorizontal} slot1={
-        <PanelStyled>
+        <PanelStyled style={{height: '100%'} /* Needed since the map doesn't handle implicit sizing well */}>
           <MapView
             lines={lines}
             activeLineId={activeLineId}
