@@ -9,6 +9,7 @@ import Select from "./Select";
 import { playLine } from "../audioGeneration";
 import styled from "styled-components";
 import { useMap } from "react-map-gl/maplibre";
+import NumberInput from "./NumberInput";
 
 interface LineControlsProps {
     activeLine: Line|undefined,
@@ -57,7 +58,7 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
     }
 
     /* Needed for inputting a float value */
-    const [resampleDistanceValue, setResampleDistanceValue] = useState<string>(resampleSettings.distance.toString());
+    const [resampleDistanceValue, setResampleDistanceValue] = useState<number|''>(resampleSettings.distance);
     return (<>
         <LineRenderer line={activeLine} />
         <SettingsWrapperStyled>
@@ -80,15 +81,9 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
                     <label htmlFor={id+'count'}>Number of notes: </label><TextInput id={id+'count'} type='number' size={3} value={resampleSettings.count} onChange={(ev)=>setResampleSettings({...resampleSettings, count: parseInt(ev.target.value)})}/>
                 </>}
                 {resampleSettings.mode === 'distance' && <>
-                    <label htmlFor={id + 'distance'}>Distance between notes: </label><TextInput id={id + 'distance'} size={5} pattern='\\d+\\.?\\d*' value={resampleDistanceValue} onChange={(ev) => {
-                        /* Guarantee the text entered matches the format of a positive float */
-                        const value = parseFloat(ev.target.value);
-                        if (ev.target.value.match(/^\d*\.?\d*$/)) {
-                            setResampleDistanceValue(ev.target.value);
-                        }
-                        if (value && value >= 0) {
-                            setResampleSettings({ ...resampleSettings, distance: parseFloat(ev.target.value) });
-                        }
+                    <label htmlFor={id + 'distance'}>Distance between notes: </label><NumberInput id={id + 'distance'} size={5} value={resampleDistanceValue} min={0} onChange={(value) => {
+                        setResampleDistanceValue(value);
+                        setResampleSettings({ ...resampleSettings, distance: value });
                     }} />
                     <Select options={{'meters': 'm', 'kilometers': 'km', 'feet': 'ft', 'miles': 'mi'}} value={resampleSettings.units} onChange={(value)=>setResampleSettings({...resampleSettings, units: value})}/>
                 </>}
@@ -96,9 +91,9 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
             <section>
                 <h2>Synth Settings</h2>
                 <RadioSet legend='Synth voice: ' options={{'classic': 'Classic', 'duo': 'Duo'}} checked={musicSettings.synth} onChange={(value)=>setMusicSettings({...musicSettings, synth: value})}/>
-                <label htmlFor={id+'lowNote'}>Low Note: </label><TextInput id={id+'lowNote'} type='number' size={3} value={musicSettings.lowNote} onChange={(ev)=>setMusicSettings({...musicSettings, lowNote: parseInt(ev.target.value)})}/>
+                <label htmlFor={id+'lowNote'}>Low Note: </label><NumberInput id={id+'lowNote'} step={1} min={0} size={3} value={musicSettings.lowNote} onChange={(value)=>setMusicSettings({...musicSettings, lowNote: value})}/>
                 <br />
-                <label htmlFor={id+'highNote'}>High Note: </label><TextInput id={id+'highNote'} type='number' size={3} value={musicSettings.highNote} onChange={(ev)=>setMusicSettings({...musicSettings, highNote: parseInt(ev.target.value)})}/>
+                <label htmlFor={id+'highNote'}>High Note: </label><NumberInput id={id+'highNote'} step={1} min={0} size={3} value={musicSettings.highNote} onChange={(value)=>setMusicSettings({...musicSettings, highNote: value})}/>
             </section>
             <section>
                 <h2>Playback Settings</h2>

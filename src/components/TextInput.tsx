@@ -14,7 +14,6 @@ const InputStyled = styled.input`
     }
 `;
 
-export default function TextInput(props: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>
-) {
+export default function TextInput(props: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>) {
     return <InputStyled type='text' {...props} />;
 }
