@@ -3,11 +3,12 @@ import type { Line, MusicSettings, ResampleSettings } from "../App";
 import { LineRenderer } from "./LineRenderer";
 import { RadioSet } from "./RadioSet";
 import { TextInput } from "./TextInput";
-import { resampleCoords } from "../lineResampling";
+import { getElevations, resampleCoords } from "../lineResampling";
 import { Button } from "./Button";
 import { Select } from "./Select";
 import { playLine } from "../audioGeneration";
 import styled from "styled-components";
+import { useMap } from "react-map-gl/maplibre";
 
 interface LineControlsProps {
     activeLine: Line|undefined,
@@ -28,16 +29,23 @@ const SettingsWrapperStyled = styled.div`
 export function LineControls({activeLine, setActiveLine, removeLine, livePreview, setLivePreview, resampleSettings, setResampleSettings: setResampleSettingsRaw, musicSettings, setMusicSettings: setMusicSettingsRaw}: LineControlsProps) {
     const id = useId();
 
+    /* Need map ref for resampling the elevations */
+    const {default: mapRef} = useMap();
+
     /* Override the settings setters to also update the active line (if present) */
     function setResampleSettings(value: ResampleSettings) {
         setResampleSettingsRaw(value);
-        if(activeLine) setActiveLine({
-            ...activeLine,
-            /* Apply the resampling */
-            coordinatesResampled: resampleCoords(activeLine.coordinatesRaw, value),
-            resampleSettings: value,
-            musicSettings: { ...musicSettings },
-        });
+        if(activeLine && mapRef) {
+            const coordinatesResampled = resampleCoords(activeLine.coordinatesRaw, value);
+            const elevations = getElevations(mapRef, coordinatesResampled);
+            setActiveLine({
+                ...activeLine,
+                coordinatesResampled,
+                elevations,
+                resampleSettings: value,
+                musicSettings: { ...musicSettings },
+            });
+        }
     }
     function setMusicSettings(value: MusicSettings) {
         setMusicSettingsRaw(value);
@@ -56,7 +64,7 @@ export function LineControls({activeLine, setActiveLine, removeLine, livePreview
             <section>
                 <Button onClick={()=>{
                     if (activeLine){
-                        removeLine(activeLine?.id);
+                        removeLine(activeLine.id);
                     }
                 }}>Remove</Button>
                 <br />
