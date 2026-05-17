@@ -57,8 +57,6 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
         });
     }
 
-    /* Needed for inputting a float value */
-    const [resampleDistanceValue, setResampleDistanceValue] = useState<number|''>(resampleSettings.distance);
     return (<>
         <LineRenderer line={activeLine} />
         <SettingsWrapperStyled>
@@ -75,25 +73,22 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
                 <h2>Resampling Settings</h2>
                 <label htmlFor={id+'smoothingFactor'}>Smoothing Factor:</label><input id={id+'smoothingFactor'} type='range' min={0} max={100} value={resampleSettings.smoothingFactor * 100} onChange={(ev)=>setResampleSettings({...resampleSettings, smoothingFactor: parseInt(ev.target.value)/100})} />
                 <br />
-                <RadioSet legend='Resample Mode: ' options={{'count': 'Note Count', 'distance': 'Distance'}} checked={resampleSettings.mode} onChange={(value)=>setResampleSettings({...resampleSettings, mode: value})}/>
+                <RadioSet legend='Resample Mode: ' options={{'count': 'Note Count', 'distance': 'Distance'}} checked={resampleSettings.mode} onChange={(value)=>setResampleSettings({...resampleSettings, mode: value})} />
                 <br />
                 {resampleSettings.mode === 'count' && <>
-                    <label htmlFor={id+'count'}>Number of notes: </label><TextInput id={id+'count'} type='number' size={3} value={resampleSettings.count} onChange={(ev)=>setResampleSettings({...resampleSettings, count: parseInt(ev.target.value)})}/>
+                    <label htmlFor={id+'count'}>Number of notes: </label><TextInput id={id+'count'} type='number' size={3} value={resampleSettings.count} onChange={(ev)=>setResampleSettings({...resampleSettings, count: parseInt(ev.target.value)})} />
                 </>}
                 {resampleSettings.mode === 'distance' && <>
-                    <label htmlFor={id + 'distance'}>Distance between notes: </label><NumberInput id={id + 'distance'} size={5} value={resampleDistanceValue} min={0} onChange={(value) => {
-                        setResampleDistanceValue(value);
-                        setResampleSettings({ ...resampleSettings, distance: value });
-                    }} />
-                    <Select options={{'meters': 'm', 'kilometers': 'km', 'feet': 'ft', 'miles': 'mi'}} value={resampleSettings.units} onChange={(value)=>setResampleSettings({...resampleSettings, units: value})}/>
+                    <label htmlFor={id + 'distance'}>Distance between notes: </label><NumberInput id={id + 'distance'} size={5} value={resampleSettings.distance} min={0} onChange={(value) =>setResampleSettings({ ...resampleSettings, distance: value })} />
+                    <Select options={{'meters': 'm', 'kilometers': 'km', 'feet': 'ft', 'miles': 'mi'}} value={resampleSettings.units} onChange={(value)=>setResampleSettings({...resampleSettings, units: value})} />
                 </>}
             </section>
             <section>
                 <h2>Synth Settings</h2>
-                <RadioSet legend='Synth voice: ' options={{'classic': 'Classic', 'duo': 'Duo'}} checked={musicSettings.synth} onChange={(value)=>setMusicSettings({...musicSettings, synth: value})}/>
-                <label htmlFor={id+'lowNote'}>Low Note: </label><NumberInput id={id+'lowNote'} step={1} min={0} size={3} value={musicSettings.lowNote} onChange={(value)=>setMusicSettings({...musicSettings, lowNote: value})}/>
+                <RadioSet legend='Synth voice: ' options={{'classic': 'Classic', 'duo': 'Duo'}} checked={musicSettings.synth} onChange={(value)=>setMusicSettings({...musicSettings, synth: value})} />
+                <label htmlFor={id+'lowNote'}>Low Note: </label><NumberInput id={id+'lowNote'} step={1} min={0} size={3} value={musicSettings.lowNote} onChange={(value)=>setMusicSettings({...musicSettings, lowNote: value})} />
                 <br />
-                <label htmlFor={id+'highNote'}>High Note: </label><NumberInput id={id+'highNote'} step={1} min={0} size={3} value={musicSettings.highNote} onChange={(value)=>setMusicSettings({...musicSettings, highNote: value})}/>
+                <label htmlFor={id+'highNote'}>High Note: </label><NumberInput id={id+'highNote'} step={1} min={0} size={3} value={musicSettings.highNote} onChange={(value)=>setMusicSettings({...musicSettings, highNote: value})} />
             </section>
             <section>
                 <h2>Playback Settings</h2>

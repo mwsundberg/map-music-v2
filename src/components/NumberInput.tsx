@@ -5,8 +5,8 @@ type ScrollableNumberInputProps = Omit<React.DetailedHTMLProps<React.InputHTMLAt
     step?: number|'any',
     min?: number,
     max?: number,
-    value: number|'',
-    onChange: (value: number)=>void,
+    value: number|undefined,
+    onChange: (value: number|undefined)=>void,
 
     /* When scrolling (when holding a modifier key or not), how much to increase/decrease by (set to 0 to disable, negative numbers are set to default values) */
     ctrlMultiplier?: number,
@@ -33,7 +33,6 @@ export default function NumberInput({step = 'any', min, max, value, onChange,
         if(ev.deltaMode === 0) scrollAmount = (scrollAmount > 0)? Math.ceil(ev.deltaY / 10):Math.floor(ev.deltaY / 10);
 
         /* Adjust the value accordingly */
-        console.log(value)
         const applyMultiplier = (multiplier: number)=>onChange(Math.max(min ?? -Infinity, Math.min(max ?? Infinity, (value || 0) + scrollAmount * multiplier)));
         if (ev.ctrlKey && ev.shiftKey) applyMultiplier(ctrlShiftMultiplier);
         else if (ev.ctrlKey) applyMultiplier(ctrlMultiplier);
@@ -52,7 +51,24 @@ export default function NumberInput({step = 'any', min, max, value, onChange,
             input?.addEventListener('wheel', onWheel, { passive: false });
             return ()=>input?.removeEventListener('wheel', onWheel);
         }
-    }, [isFocused, value])
-    
-    return <TextInput ref={inputRef} type='number' step={step} min={min} max={max} value={value} onChange={(ev) => onChange(parseFloat(ev.target.value))} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} {...props} />
+    }, [isFocused, value]);
+
+    return <TextInput ref={inputRef}
+        type='number' step={step} min={min} max={max}
+        value={value} onChange={(ev) => {
+            /* Actual bad inputs don't change state as to not clear the input on typoing */
+            if(ev.target.value === '' && ev.target.validity.badInput) { return; }
+            if(ev.target.value === '') { onChange(undefined); return; }
+            onChange(parseFloat(ev.target.value));
+        }}
+        onInput={(ev)=>{
+            /* Prevents entering invalid characters into an empty input */
+            /* @ts-ignore (ev.target isn't interpreted as an HTMLInputElement) */
+            if(ev.target.validity.badInput) {
+                /* @ts-ignore (same as above) */
+                ev.target.value = value;
+            }
+        }}
+        onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
+        {...props} />
 }
