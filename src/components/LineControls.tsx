@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId } from "react";
 import type { Line, MusicSettings, ResampleSettings } from "../App";
 import LineRenderer from "./LineRenderer";
 import RadioSet from "./RadioSet";
@@ -76,10 +76,10 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
                 <RadioSet legend='Resample Mode: ' options={{'count': 'Note Count', 'distance': 'Distance'}} checked={resampleSettings.mode} onChange={(value)=>setResampleSettings({...resampleSettings, mode: value})} />
                 <br />
                 {resampleSettings.mode === 'count' && <>
-                    <label htmlFor={id+'count'}>Number of notes: </label><TextInput id={id+'count'} type='number' size={3} value={resampleSettings.count} onChange={(ev)=>setResampleSettings({...resampleSettings, count: parseInt(ev.target.value)})} />
+                    <label htmlFor={id+'count'}>Number of notes: </label><NumberInput id={id+'count'} size={3} step={1} min={1} value={resampleSettings.count} onChange={(value)=>setResampleSettings({...resampleSettings, count: value})} />
                 </>}
                 {resampleSettings.mode === 'distance' && <>
-                    <label htmlFor={id + 'distance'}>Distance between notes: </label><NumberInput id={id + 'distance'} size={5} value={resampleSettings.distance} min={0} onChange={(value) =>setResampleSettings({ ...resampleSettings, distance: value })} />
+                    <label htmlFor={id + 'distance'}>Distance between notes: </label><NumberInput id={id + 'distance'} size={5} value={resampleSettings.distance} min={0} onChange={(value)=>setResampleSettings({...resampleSettings, distance: value})} />
                     <Select options={{'meters': 'm', 'kilometers': 'km', 'feet': 'ft', 'miles': 'mi'}} value={resampleSettings.units} onChange={(value)=>setResampleSettings({...resampleSettings, units: value})} />
                 </>}
             </section>
