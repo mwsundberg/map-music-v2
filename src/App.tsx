@@ -81,7 +81,7 @@ function App() {
     synth: 'classic',
     lowNote: 24,
     highNote: 84,
-    noteTime: 500,
+    noteTime: 125,
   });
 
   /* Lines state */
