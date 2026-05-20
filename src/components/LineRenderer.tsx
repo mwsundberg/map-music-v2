@@ -3,6 +3,7 @@ import type { Line } from '../App'
 import { useMap } from 'react-map-gl/maplibre';
 import { getElevations, resampleCoords } from '../lineResampling';
 import elevationColor from '../elevationColor';
+import { minAndMax, rescaleFrom0To1 } from '../utils';
 
 interface LineRendererProps {
     line: Line|undefined,
@@ -41,13 +42,10 @@ export default function LineRenderer({line, noteDotRadius = 10, ...props}: LineR
             const elevationsResampledRaw = getElevations(mapRef, lineResampled);
 
             /* Get the min and max elevations */
-            const [minElevation, maxElevation] = elevationsResampledRaw.reduce(([min, max], current)=>[
-                (current < min)? current:min,
-                (current > max)? current:max
-            ], [Infinity, -Infinity]);
+            const [minElevation, maxElevation] = minAndMax(elevationsResampledRaw);
 
             /* Rescale the elevations to the [0,1] range */
-            const elevationsResampled = elevationsResampledRaw.map((elevation)=>((elevation - minElevation) / (maxElevation - minElevation)));
+            const elevationsResampled = rescaleFrom0To1(elevationsResampledRaw);
 
             return [minElevation, maxElevation, elevationsResampled];
         } else return [undefined, undefined, undefined];

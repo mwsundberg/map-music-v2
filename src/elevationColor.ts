@@ -1,14 +1,12 @@
 import { elevationColorMap } from './mapConfig';
+import { minAndMax } from './utils';
 
 /** Interpolate a color for a given elevation */
 export default function elevationColor(elevation: number): string {
     const elevationColorMapKeys = Object.keys(elevationColorMap).map((k)=>parseInt(k));
 
     /* Get the range of the elevation color map */
-    const [minElevationKey, maxElevationKey] = elevationColorMapKeys.reduce(([min, max], current)=>[
-        (current < min)? current:min,
-        (current > max)? current:max
-    ], [Infinity, -Infinity]);
+    const [minElevationKey, maxElevationKey] = minAndMax(elevationColorMapKeys);
 
     /* Get closest elevations that have a mapped color */
     const [lowerElevationKey, upperElevationKey] = elevationColorMapKeys.reduce(([lower, upper], elevationKey)=>{
