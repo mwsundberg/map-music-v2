@@ -10,6 +10,7 @@ import { makeSequence, playLine } from "../audioGeneration";
 import styled from "styled-components";
 import { useMap } from "react-map-gl/maplibre";
 import NumberInput from "./NumberInput";
+import PitchInput from "./PitchInput";
 
 interface LineControlsProps {
     activeLine: Line|undefined,
@@ -65,7 +66,7 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
                 resampleSettings: { ...resampleSettings },
                 musicSettings: value,
             });
-    }
+        }
     }
 
     return (<>
@@ -97,9 +98,9 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
             <section>
                 <h2>Synth Settings</h2>
                 <RadioSet legend='Synth voice: ' options={{'classic': 'Classic', 'duo': 'Duo'}} checked={musicSettings.synth} onChange={(value)=>setMusicSettings({...musicSettings, synth: value})} />
-                <label htmlFor={id+'lowNote'}>Low Note: </label><NumberInput id={id+'lowNote'} step={1} min={0} size={3} value={musicSettings.lowNote} onChange={(value)=>setMusicSettings({...musicSettings, lowNote: value})} />
+                <label htmlFor={id+'lowNote'}>Low Note: </label><PitchInput id={id+'lowNote'} value={musicSettings.lowNote} onChange={(value)=>setMusicSettings({...musicSettings, lowNote: value})} />
                 <br />
-                <label htmlFor={id+'highNote'}>High Note: </label><NumberInput id={id+'highNote'} step={1} min={0} size={3} value={musicSettings.highNote} onChange={(value)=>setMusicSettings({...musicSettings, highNote: value})} />
+                <label htmlFor={id+'highNote'}>High Note: </label><PitchInput id={id+'highNote'} value={musicSettings.highNote} onChange={(value)=>setMusicSettings({...musicSettings, highNote: value})} />
                 <br />
                 <label htmlFor={id+'noteTime'}>Note Duration (ms): </label><NumberInput id={id+'noteTime'} min={0} size={3} value={musicSettings.noteTime} onChange={(value)=>setMusicSettings({...musicSettings, noteTime: value})} />
                 <br />

@@ -25,8 +25,10 @@ export type ResampleSettings = {
 
 export type MusicSettings = {
   synth: 'classic'|'duo',
-  /** TODO Could be based on absolute elevation */
+  /* TODO Could be based on absolute elevation */
+  /** Lower bounds of the remapped scale, in hz */
   lowNote: number,
+  /** Upper bounds of the remapped scale, in hz */
   highNote: number,
   /** Length of a single note in ms (do the math if wanting to set the total clip length) */
   noteTime: number,
