@@ -6,7 +6,7 @@ import TextInput from "./TextInput";
 import { getElevations, resampleCoords } from "../lineResampling";
 import Button from "./Button";
 import Select from "./Select";
-import { playLine } from "../audioGeneration";
+import { makeSequence, playLine } from "../audioGeneration";
 import styled from "styled-components";
 import { useMap } from "react-map-gl/maplibre";
 import NumberInput from "./NumberInput";
@@ -37,12 +37,15 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
     function setResampleSettings(value: ResampleSettings) {
         setResampleSettingsRaw(value);
         if(activeLine && mapRef) {
+            /* Regenerate all dependent components */
             const coordinatesResampled = resampleCoords(activeLine.coordinatesRaw, value);
             const elevations = getElevations(mapRef, coordinatesResampled);
+            const musicSequence = makeSequence(elevations, musicSettings);
             setActiveLine({
                 ...activeLine,
                 coordinatesResampled,
                 elevations,
+                musicSequence,
                 resampleSettings: value,
                 musicSettings: { ...musicSettings },
             });
@@ -50,11 +53,19 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
     }
     function setMusicSettings(value: MusicSettings) {
         setMusicSettingsRaw(value);
-        if(activeLine) setActiveLine({
-            ...activeLine,
-            resampleSettings: { ...resampleSettings },
-            musicSettings: value,
-        });
+        if(activeLine) {
+            /* Clear the existing audio sequence if it's currently playing */
+            activeLine.musicSequence.dispose();
+
+            /* Make and save the new sequence */
+            const musicSequence = makeSequence(activeLine.elevations, value);
+            setActiveLine({
+                ...activeLine,
+                musicSequence,
+                resampleSettings: { ...resampleSettings },
+                musicSettings: value,
+            });
+    }
     }
 
     return (<>

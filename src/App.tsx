@@ -8,8 +8,9 @@ import LineControls from './components/LineControls';
 import LineRenderer from './components/LineRenderer';
 import { getElevations, resampleCoords } from './lineResampling';
 import Button from './components/Button';
-import { playLine } from './audioGeneration';
+import { makeSequence, playLine } from './audioGeneration';
 import { useMap, type MapRef } from 'react-map-gl/maplibre';
+import { Sequence } from 'tone';
 
 export type ResampleSettings = {
   /** How much to smooth the line, range [0,1] */
@@ -44,6 +45,9 @@ export type Line = {
   coordinatesResampled: Feature<MultiPoint>,
   /** Elevation in meters measured along `coordinatesResampled` */
   elevations: number[],
+
+  /** Tone.js Sequence rendering the line as sound */
+  musicSequence: Sequence,
 
   /** Resampling settings */
   resampleSettings: ResampleSettings,
@@ -105,12 +109,14 @@ function App() {
   const makeNewLine = ({id, coordinatesRaw}: Pick<Line, 'id'|'coordinatesRaw'>) => {
     const coordinatesResampled = resampleCoords(coordinatesRaw, resampleSettings);
     const elevations = getElevations(mapRef as MapRef, coordinatesResampled);
+    const musicSequence = makeSequence(elevations, musicSettings);
     const newLine: Line = {
       id: id,
       coordinatesRaw: coordinatesRaw,
       name: undefined,
       coordinatesResampled: coordinatesResampled,
       elevations: elevations,
+      musicSequence: musicSequence,
       resampleSettings: resampleSettings,
       musicSettings: musicSettings,
     };
