@@ -3,7 +3,7 @@ import type { Line, MusicSettings } from './App';
 import { rescaleFrom0To1 } from './utils';
 
 /** Generates a Tone.js Sequence from a given line */
-export function makeSequence(elevations: number[], {synth, lowNote, highNote, noteTime}: MusicSettings): Sequence {
+export function makeSequence(elevations: number[], {synth, lowNote, highNote, noteTime, roundNotes}: MusicSettings): Sequence {
     /* Select the synth */
     let toneSynth: Synth|DuoSynth;
     switch (synth) {
@@ -16,9 +16,9 @@ export function makeSequence(elevations: number[], {synth, lowNote, highNote, no
     }
     toneSynth.toDestination();
 
-    /* Rescale the elevations to the scale of `lowNote` to `highNote`and convert to hz frequency */
+    /* Rescale the elevations to the scale of `lowNote` to `highNote`and convert to hz frequency, rounding to a perfect midi note if specified to */
     const noteRange = highNote - lowNote;
-    const notes = rescaleFrom0To1(elevations).map((x)=>Frequency(x * noteRange + lowNote, 'midi').toFrequency());
+    const notes = rescaleFrom0To1(elevations).map((x)=>Frequency(roundNotes? Math.round(x * noteRange + lowNote):(x * noteRange + lowNote), 'midi').toFrequency());
 
     /* Make a sequence with the notes, to be stored in the line object */
     const sequence = new Sequence((time, note)=>{

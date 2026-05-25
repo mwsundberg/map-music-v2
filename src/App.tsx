@@ -30,6 +30,8 @@ export type MusicSettings = {
   highNote: number,
   /** Length of a single note in ms (do the math if wanting to set the total clip length) */
   noteTime: number,
+  /** Round elevation generated frequency to precise midi/pitch notation notes */
+  roundNotes: boolean,
 }
 
 export type Line = {
@@ -86,6 +88,7 @@ function App() {
     lowNote: 24,
     highNote: 84,
     noteTime: 125,
+    roundNotes: false,
   });
 
   /* Lines state */

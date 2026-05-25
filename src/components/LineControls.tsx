@@ -102,6 +102,8 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
                 <label htmlFor={id+'highNote'}>High Note: </label><NumberInput id={id+'highNote'} step={1} min={0} size={3} value={musicSettings.highNote} onChange={(value)=>setMusicSettings({...musicSettings, highNote: value})} />
                 <br />
                 <label htmlFor={id+'noteTime'}>Note Duration (ms): </label><NumberInput id={id+'noteTime'} min={0} size={3} value={musicSettings.noteTime} onChange={(value)=>setMusicSettings({...musicSettings, noteTime: value})} />
+                <br />
+                <input id={id+'roundNotes'} type='checkbox' checked={musicSettings.roundNotes} onChange={(ev)=>setMusicSettings({...musicSettings, roundNotes: ev.target.checked})} /><label htmlFor={id+'roundNotes'}>Round frequency to notes</label>
             </section>
             <section>
                 <h2>Playback Settings</h2>
