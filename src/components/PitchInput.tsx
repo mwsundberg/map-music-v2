@@ -17,7 +17,7 @@ const PitchNotationStyled = styled.span`
 `;
 
 /* Regex to recognize a valid input */
-const validInputPattern = '\\d{0,5}[Hh]?[Zz]?|[CDEFGABcdefgab](bb|b|#|x)?(-?[1-4]?|1?\\d?)';
+const validInputPattern = '\\d{0,5}[Hh]?[Zz]?|[CDEFGABcdefgab](bb|b|#|x)?(-?[1-4]?|\\d?|1?[01]?)';
 const hzInput = /^(\d{1,5}hz)$/i;
 const midiInput = /^(\d{1,3})$/;
 const standardInput = /^([CDEFGAB](bb|b|#|x)?(-[1-4]|[0-9]|10|11))$/i;

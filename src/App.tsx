@@ -10,7 +10,7 @@ import { getElevations, resampleCoords } from './lineResampling';
 import Button from './components/Button';
 import { makeSequence, playLine } from './audioGeneration';
 import { useMap, type MapRef } from 'react-map-gl/maplibre';
-import { Sequence } from 'tone';
+import { Frequency, Sequence } from 'tone';
 
 export type ResampleSettings = {
   /** How much to smooth the line, range [0,1] */
@@ -87,8 +87,8 @@ function App() {
   });
   const [musicSettings, setMusicSettings] = useState<MusicSettings>({
     synth: 'classic',
-    lowNote: 24,
-    highNote: 84,
+    lowNote: Frequency(24, 'midi').toFrequency(),
+    highNote: Frequency(84, 'midi').toFrequency(),
     noteTime: 125,
     roundNotes: false,
   });

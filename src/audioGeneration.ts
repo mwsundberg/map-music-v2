@@ -16,9 +16,13 @@ export function makeSequence(elevations: number[], {synth, lowNote, highNote, no
     }
     toneSynth.toDestination();
 
-    /* Rescale the elevations to the scale of `lowNote` to `highNote`and convert to hz frequency, rounding to a perfect midi note if specified to */
+    /* Rescale the elevations to the scale of `lowNote` to `highNote`, rounding to a perfect midi note if specified to */
+    [lowNote, highNote] = [Math.min(lowNote, highNote), Math.max(lowNote, highNote)];
     const noteRange = highNote - lowNote;
-    const notes = rescaleFrom0To1(elevations).map((x)=>Frequency(roundNotes? Math.round(x * noteRange + lowNote):(x * noteRange + lowNote), 'midi').toFrequency());
+    const notes = rescaleFrom0To1(elevations)
+        .map((x) => roundNotes?
+            Frequency(x * noteRange + lowNote).toNote() :
+            (x * noteRange + lowNote));
 
     /* Make a sequence with the notes, to be stored in the line object */
     const sequence = new Sequence((time, note)=>{
