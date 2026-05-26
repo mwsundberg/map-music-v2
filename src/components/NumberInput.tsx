@@ -34,13 +34,6 @@ export default function NumberInput({step = 'any', min, max, value, onChange, pa
     /* Internal state store to accomodate invalid inputs without having to pass invalid inputs to the value/onChange state */
     const [inputValue, setInputValue] = useState(value ?? NaN);
 
-    /* Wrapped setter that handles whether to pass invalid state as undefined or not */
-    function saveValue(newValue: number) {
-        setInputValue(newValue);
-        if(!isNaN(newValue)) onChange(newValue);
-        else if(passInvalidState) onChange(undefined);
-    }
-
     /* On scroll, increment the value by the appropriate multiplier after correcting for the scroll step size */
     function onWheel(ev: WheelEvent) {
         ev.preventDefault();
@@ -52,15 +45,16 @@ export default function NumberInput({step = 'any', min, max, value, onChange, pa
 
         /* Adjust the value accordingly */
         function applyMultiplier(multiplier: number) {
-            let newValue = (value ?? min ?? 0) + scrollAmount * multiplier;
-            
-            if(min !== undefined && newValue < min) saveValue(min);
-            else if(max !== undefined && newValue > max) saveValue(max);
-            else saveValue(newValue);
+            setInputValue((value) => {
+                const newValue = value + scrollAmount * multiplier;
+                if(min !== undefined && newValue < min) return min;
+                else if(max !== undefined && newValue > max) return max;
+                else return newValue;
+            });
         }
-        if (ev.ctrlKey && ev.shiftKey) applyMultiplier(ctrlShiftMultiplier);
-        else if (ev.ctrlKey) applyMultiplier(ctrlMultiplier);
-        else if (ev.shiftKey) applyMultiplier(shiftMultiplier);
+        if(ev.ctrlKey && ev.shiftKey) applyMultiplier(ctrlShiftMultiplier);
+        else if(ev.ctrlKey) applyMultiplier(ctrlMultiplier);
+        else if(ev.shiftKey) applyMultiplier(shiftMultiplier);
         else applyMultiplier(normalMultiplier);
     }
 
@@ -74,7 +68,21 @@ export default function NumberInput({step = 'any', min, max, value, onChange, pa
             input?.addEventListener('wheel', onWheel, { passive: false });
             return ()=>input?.removeEventListener('wheel', onWheel);
         }
-    }, [isFocused, value, ctrlMultiplier, normalMultiplier, shiftMultiplier, ctrlShiftMultiplier, passInvalidState]);
+    }, [isFocused, ctrlMultiplier, normalMultiplier, shiftMultiplier, ctrlShiftMultiplier]);
+
+    /* Sync prop state and internal state */
+    /* TODO debug, gets caught in an update loop sometimes with fast edits */
+    useEffect(()=>{
+        if(inputValue !== value) {
+            if(isNaN(inputValue) && passInvalidState) onChange(undefined);
+            else if(!isNaN(inputValue)) onChange(inputValue);
+        }
+    }, [inputValue, passInvalidState]);
+    
+    useEffect(()=>{
+        if(value !== inputValue) setInputValue(value ?? NaN);
+    }, [value]);
+
 
     return <TextInput ref={inputRef}
         type='number' step={step} min={min} max={max}
@@ -82,7 +90,7 @@ export default function NumberInput({step = 'any', min, max, value, onChange, pa
         onChange={(ev)=>{
             /* Actual bad inputs don't change state as to not clear the input on typoing */
             if(ev.target.value === '' && ev.target.validity.badInput) { return; }
-            saveValue(parseFloat(ev.target.value));
+            setInputValue(parseFloat(ev.target.value));
         }}
         onInput={(ev)=>{
             /* Prevents entering invalid characters into an empty input */

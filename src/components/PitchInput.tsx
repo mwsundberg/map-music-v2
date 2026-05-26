@@ -39,7 +39,7 @@ export default function PitchInput({value, onChange, ...props}: PitchInputProps)
     if(input.match(midiInput)) inputValue = Frequency(parseInt(input), 'midi').toFrequency();
     if(input.match(standardInput)) inputValue = Frequency(input.substring(0,1).toUpperCase() + input.substring(1).toLowerCase()).toFrequency();
 
-    /* Update back and forth between the prop state and internal */
+    /* Sync the prop state and internal state */
     useEffect(()=>{
         if(inputValue !== undefined && value !== inputValue) {
             onChange(inputValue);
