@@ -1,5 +1,5 @@
 import type { Feature, LineString, MultiPoint } from 'geojson';
-import type { ResampleSettings } from './App';
+import type { ResampleSettings } from './useLines';
 import { length, lineChunk, multiPoint } from '@turf/turf';
 import type { MapRef } from 'react-map-gl/maplibre';
 

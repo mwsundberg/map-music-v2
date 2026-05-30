@@ -1,20 +1,18 @@
 import { useId } from "react";
-import type { Line, MusicSettings, ResampleSettings } from "../App";
+import type { Line, MusicSettings, ResampleSettings } from '../useLines';
 import LineRenderer from "./LineRenderer";
 import RadioSet from "./RadioSet";
 import TextInput from "./TextInput";
-import { getElevations, resampleCoords } from "../lineResampling";
 import Button from "./Button";
 import Select from "./Select";
-import { makeSequence, playLine } from "../audioGeneration";
+import { playLine } from "../audioGeneration";
 import styled from "styled-components";
-import { useMap } from "react-map-gl/maplibre";
 import NumberInput from "./NumberInput";
 import PitchInput from "./PitchInput";
 
 interface LineControlsProps {
     activeLine: Line|undefined,
-    setActiveLine: (value: Line)=>void,
+    updateLine: (value: Line)=>void,
     removeLine: (id: string)=>void,
     livePreview: boolean,
     setLivePreview: (value: boolean)=>void,
@@ -28,46 +26,8 @@ const SettingsWrapperStyled = styled.div`
     padding: 1ch;
 `;
 
-export default function LineControls({activeLine, setActiveLine, removeLine, livePreview, setLivePreview, resampleSettings, setResampleSettings: setResampleSettingsRaw, musicSettings, setMusicSettings: setMusicSettingsRaw}: LineControlsProps) {
+export default function LineControls({activeLine, updateLine, removeLine, livePreview, setLivePreview, resampleSettings, setResampleSettings, musicSettings, setMusicSettings}: LineControlsProps) {
     const id = useId();
-
-    /* Need map ref for resampling the elevations */
-    const {default: mapRef} = useMap();
-
-    /* Override the settings setters to also update the active line (if present) */
-    function setResampleSettings(value: ResampleSettings) {
-        setResampleSettingsRaw(value);
-        if(activeLine && mapRef) {
-            /* Regenerate all dependent components */
-            const coordinatesResampled = resampleCoords(activeLine.coordinatesRaw, value);
-            const elevations = getElevations(mapRef, coordinatesResampled);
-            const musicSequence = makeSequence(elevations, musicSettings);
-            setActiveLine({
-                ...activeLine,
-                coordinatesResampled,
-                elevations,
-                musicSequence,
-                resampleSettings: value,
-                musicSettings: { ...musicSettings },
-            });
-        }
-    }
-    function setMusicSettings(value: MusicSettings) {
-        setMusicSettingsRaw(value);
-        if(activeLine) {
-            /* Clear the existing audio sequence if it's currently playing */
-            activeLine.musicSequence.dispose();
-
-            /* Make and save the new sequence */
-            const musicSequence = makeSequence(activeLine.elevations, value);
-            setActiveLine({
-                ...activeLine,
-                musicSequence,
-                resampleSettings: { ...resampleSettings },
-                musicSettings: value,
-            });
-        }
-    }
 
     return (<>
         <LineRenderer line={activeLine} />
@@ -79,7 +39,7 @@ export default function LineControls({activeLine, setActiveLine, removeLine, liv
                     }
                 }}>Remove</Button>
                 <br />
-                <label htmlFor={id+'name'}>Name: </label><TextInput id={id+'name'} value={activeLine?.name || ''} onChange={(ev)=>{if(activeLine) setActiveLine({...activeLine, name: ev.target.value})}} />
+                <label htmlFor={id+'name'}>Name: </label><TextInput id={id+'name'} value={activeLine?.name || ''} onChange={(ev)=>{if(activeLine) updateLine({...activeLine, name: ev.target.value})}} />
             </section>
             <section>
                 <h2>Resampling Settings</h2>

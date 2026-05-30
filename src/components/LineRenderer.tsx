@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Line } from '../App'
+import type { Line } from '../useLines';
 import { useMap } from 'react-map-gl/maplibre';
 import { getElevations, resampleCoords } from '../lineResampling';
 import elevationColor from '../elevationColor';

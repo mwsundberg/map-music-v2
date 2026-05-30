@@ -6,7 +6,7 @@ import { bbox, bboxPolygon, booleanIntersects, featureCollection, lineString } f
 import styled from 'styled-components';
 import MapControls from './components/MapControls';
 import { mapPresets, mapStyle } from './mapConfig';
-import type { Line } from './App';
+import type { Line } from './useLines';
 
 interface MapViewProps {
     lines: Line[],

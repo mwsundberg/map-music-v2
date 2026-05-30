@@ -1,5 +1,5 @@
 import { start, Synth, DuoSynth, Frequency, now, Sequence, getTransport } from 'tone';
-import type { Line, MusicSettings } from './App';
+import type { Line, MusicSettings } from './useLines';
 import { rescaleFrom0To1 } from './utils';
 
 /** Generates a Tone.js Sequence from a given line */
