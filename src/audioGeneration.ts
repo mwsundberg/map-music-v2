@@ -1,9 +1,13 @@
 import { start, Synth, DuoSynth, Frequency, now, Sequence, getTransport } from 'tone';
+import type { FeatureCollection, Point } from "geojson";
 import type { Line, MusicSettings } from './useLines';
 import { rescaleFrom0To1 } from './utils';
 
 /** Generates a Tone.js Sequence from a given line */
-export function makeSequence(elevations: number[], {synth, lowNote, highNote, noteTime, roundNotes}: MusicSettings): Sequence {
+export function makeSequence(coordinatesResampled: FeatureCollection<Point, { elevation: number }>, {synth, lowNote, highNote, noteTime, roundNotes}: MusicSettings): Sequence {
+    /* Extract the elevations from the GeoJSON */
+    const elevations = coordinatesResampled.features.map((point)=>point.properties.elevation);
+    
     /* Select the synth */
     let toneSynth: Synth|DuoSynth;
     switch (synth) {

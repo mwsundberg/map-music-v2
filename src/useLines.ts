@@ -1,6 +1,6 @@
-import type { Feature, LineString, MultiPoint } from "geojson";
+import type { Feature, FeatureCollection, LineString, Point } from "geojson";
 import type { Sequence } from "tone";
-import { getElevations, resampleCoords } from "./lineResampling";
+import { resampleCoords } from "./lineResampling";
 import { useMap, type MapRef } from "react-map-gl/maplibre";
 import { makeSequence, playLine } from "./audioGeneration";
 import { useMemo, useState } from "react";
@@ -38,10 +38,9 @@ export type Line = {
 
   /** Raw input coordinates that make up the line, `{lng, lat}` objects */
   coordinatesRaw: Feature<LineString>;
-  /** Resampled into evenly spaced points along the original line, with optional smoothing */
-  coordinatesResampled: Feature<MultiPoint>;
-  /** Elevation in meters measured along `coordinatesResampled` */
-  elevations: number[];
+
+  /** Resampled into evenly spaced points along the original line, with elevation and the percentage along the line of the point packed into the Feature properties */
+  coordinatesResampled: FeatureCollection<Point, { lineId: string, fractionAlong: number, elevation: number }>;
 
   /** Tone.js Sequence rendering the line as sound */
   musicSequence: Sequence;
@@ -69,16 +68,14 @@ export default function useLines(resampleSettings: ResampleSettings, musicSettin
     /* Management functions */
     function addLine({ id, coordinatesRaw }: Pick<Line, 'id' | 'coordinatesRaw'>) {
         /* Generate derived state */
-        const coordinatesResampled = resampleCoords(coordinatesRaw, resampleSettings);
-        const elevations = getElevations(mapRef as MapRef, coordinatesResampled);
-        const musicSequence = makeSequence(elevations, musicSettings);
+        const coordinatesResampled = resampleCoords(mapRef as MapRef, id, coordinatesRaw, resampleSettings);
+        const musicSequence = makeSequence(coordinatesResampled, musicSettings);
 
         const newLine = {
             id: id,
             coordinatesRaw: coordinatesRaw,
             name: undefined,
             coordinatesResampled: coordinatesResampled,
-            elevations: elevations,
             musicSequence: musicSequence,
             resampleSettings: resampleSettings,
             musicSettings: musicSettings,
@@ -115,14 +112,12 @@ export default function useLines(resampleSettings: ResampleSettings, musicSettin
             l.musicSequence.dispose();
 
             /* Generate derived state */
-            const coordinatesResampled = resampleCoords(l.coordinatesRaw, resampleSettings);
-            const elevations = getElevations(mapRef as MapRef, coordinatesResampled);
-            const musicSequence = makeSequence(elevations, l.musicSettings);
+            const coordinatesResampled = resampleCoords(mapRef as MapRef, id, l.coordinatesRaw, resampleSettings);
+            const musicSequence = makeSequence(coordinatesResampled, l.musicSettings);
 
             return {
                 ...l,
                 coordinatesResampled: coordinatesResampled,
-                elevations: elevations,
                 musicSequence: musicSequence,
                 resampleSettings: resampleSettings,
             };
@@ -139,7 +134,7 @@ export default function useLines(resampleSettings: ResampleSettings, musicSettin
             l.musicSequence.dispose();
 
             /* Generate derived state */
-            const musicSequence = makeSequence(l.elevations, musicSettings);
+            const musicSequence = makeSequence(l.coordinatesResampled, musicSettings);
 
             return {
                 ...l,

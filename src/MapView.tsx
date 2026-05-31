@@ -24,7 +24,7 @@ const MapContainer = styled.div`
 `;
 
 /** Map with controls for a location bookmark system */
-export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapViewProps) {
+export default function MapView({lines, addLine, activeLineId, setActiveLineId}: MapViewProps) {
     const [mapInputMode, setMapInputMode] = useState<'panning'|'drawing'>('panning');
     const [cursor, setCursor] = useState((mapInputMode === 'drawing')? 'pointer' : undefined);
     const [mapViewState, setMapViewState] = useState(mapPresets[0].viewState);
@@ -107,7 +107,7 @@ export function MapView({lines, addLine, activeLineId, setActiveLineId}: MapView
 
     /* Convert the lines to GeoJSON for rendering */
     const linesRawAsGeoJSON = featureCollection(lines.map(({ coordinatesRaw }) => coordinatesRaw));
-    const linesResampledAsGeoJSON = featureCollection(lines.map(({ coordinatesResampled }) => coordinatesResampled));
+    const linesResampledAsGeoJSON = featureCollection(lines.map(({ coordinatesResampled }) => coordinatesResampled.features).flat());
     const drawnLineAsGeoJSON: Feature = {
         type: 'Feature',
         properties: {},

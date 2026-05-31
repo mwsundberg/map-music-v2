@@ -1,39 +1,44 @@
-import type { Feature, LineString, MultiPoint } from 'geojson';
+import type { Feature, FeatureCollection, LineString, Point } from 'geojson';
 import type { ResampleSettings } from './useLines';
-import { length, lineChunk, multiPoint } from '@turf/turf';
+import { along, featureCollection, length } from '@turf/turf';
 import type { MapRef } from 'react-map-gl/maplibre';
 
 /** Generate an evenly spaced set of points along a GeoJSON LineString */
-export function resampleCoords(coords: Feature<LineString>, {smoothingFactor, mode, count: sampleCount, distance: gapDistance, units}: ResampleSettings): Feature<MultiPoint> {
+export function resampleCoords(map: MapRef, id: string, coords: Feature<LineString>, {smoothingFactor, mode, count: sampleCount, distance: gapDistance, units}: ResampleSettings): FeatureCollection<Point, { lineId: string, fractionAlong: number, elevation: number }> {
     /* Smoothing */
     /* TODO */
 
     /* Get the length divide by to get a given number of chunks */
+    const totalLength = length(coords, {units: units});
     if(mode === 'count') {
         if (isNaN(sampleCount) || sampleCount < 2) sampleCount = 2;
-        gapDistance = length(coords, {units: units}) / (sampleCount - 1);
+        gapDistance = totalLength / (sampleCount - 1);
     }
 
-    /* Divide the line into segments of the given length */
-    const chunks = lineChunk(coords, gapDistance, {units: units});
+    /* Get points along the line, with the percentage along the line the point is and the elevation at the point */
+    const coordsResampled = [];
+    for(let d = 0; d < totalLength; d += gapDistance) {
+        const point = along(coords, d, {units: units});
+        point.properties = {
+            lineId: id,
+            fractionAlong: d / totalLength,
+            elevation: map.queryTerrainElevation(point.geometry.coordinates as [number, number]),
+        };
 
-    /* Convert the line chunks into a line of its own */
-    const startCoords = chunks.features.map(({geometry: {coordinates: lineArray}})=>(lineArray[0]));
-    const lastSegment = chunks.features[chunks.features.length - 1].geometry.coordinates;
-    
-    /* Make a new MultiPoint collection, passing along the properties if needed */
-    return multiPoint([...startCoords, lastSegment[lastSegment.length - 1]], coords.properties);
-}
+        coordsResampled.push(point as Feature<Point, {lineId: string, fractionAlong: number, elevation: number}>);
+    }
+    /* The last point isn't always added properly in 'count' mode */
+    if(mode === 'count') {
+                const point = along(coords, totalLength, {units: units});
+        point.properties = {
+            lineId: id,
+            fractionAlong: 1,
+            elevation: map.queryTerrainElevation(point.geometry.coordinates as [number, number]),
+        };
 
-/** Get elevations at a set of points, returning an array in the same order */
-export function getElevations(map: MapRef, coords: Feature<MultiPoint>): number[] {
-    const elevations = coords.geometry.coordinates.map(([lng, lat])=>{
-        return map.queryTerrainElevation([lng, lat]);
-    });
+        coordsResampled.push(point as Feature<Point, {lineId: string, fractionAlong: number, elevation: number}>);
+    }
 
-    /* Check that we actually got data before returning */
-    if(elevations[0] === null) {
-        throw new Error('Getting null when checking elevations with `queryTerrainElevation`');
-    };
-    return elevations as number[];
+    /* Convert the Features array into a FeatureCollection */
+    return featureCollection(coordsResampled);
 }

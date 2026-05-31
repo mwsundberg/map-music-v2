@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Line } from '../useLines';
 import { useMap } from 'react-map-gl/maplibre';
-import { getElevations, resampleCoords } from '../lineResampling';
+import { resampleCoords } from '../lineResampling';
 import elevationColor from '../elevationColor';
 import { minAndMax, rescaleFrom0To1 } from '../utils';
 
@@ -36,18 +36,19 @@ export default function LineRenderer({line, noteDotRadius = 10, ...props}: LineR
 
     /* Resample at a higher resolution to draw the elevation profile, with the notes drawn in as a separate layer (so lines with fewer notes still look pretty)
      * The `elevationsResampled` return is in the 0-1 range already, but we still need the min and max elevations for drawing in the note circles at the right height */
-    const [minElevation, maxElevation, elevationsResampled] = useMemo(()=>{
+    const [minElevation, elevationRange, elevationsResampled] = useMemo(()=>{
         if(line && mapRef) {
-            const lineResampled = resampleCoords(line.coordinatesRaw, {...line.resampleSettings, mode: 'count', count: Math.round(width / 4)});
-            const elevationsResampledRaw = getElevations(mapRef, lineResampled);
+            const lineResampled = resampleCoords(mapRef, '', line.coordinatesRaw, {...line.resampleSettings, mode: 'count', count: Math.round(width / 4)});
+            const elevationsResampledRaw = lineResampled.features.map((point)=>point.properties.elevation);
 
             /* Get the min and max elevations */
             const [minElevation, maxElevation] = minAndMax(elevationsResampledRaw);
+            const elevationRange = maxElevation - minElevation;
 
             /* Rescale the elevations to the [0,1] range */
             const elevationsResampled = rescaleFrom0To1(elevationsResampledRaw);
 
-            return [minElevation, maxElevation, elevationsResampled];
+            return [minElevation, elevationRange, elevationsResampled];
         } else return [undefined, undefined, undefined];
     }, [line?.id, width]);
 
@@ -80,12 +81,12 @@ export default function LineRenderer({line, noteDotRadius = 10, ...props}: LineR
                 ctx.fill();
 
                 /* Draw the notes themselves as colored circles at each sampled elevation, drawing them twice to get a white border underneath each one */
-                for(let i = 0; i < line.elevations.length; i++) {
+                for(const point of line.coordinatesResampled.features) {
                     ctx.beginPath();
                     ctx.fillStyle = 'white';
                     ctx.arc(
-                        calcX(i / (line.elevations.length - 1)),
-                        calcY((line.elevations[i] - minElevation) / (maxElevation - minElevation)),
+                        calcX(point.properties.fractionAlong),
+                        calcY((point.properties.elevation - minElevation) / elevationRange),
                         noteDotRadiusWithBorder,
                         0,
                         2 * Math.PI
@@ -93,12 +94,12 @@ export default function LineRenderer({line, noteDotRadius = 10, ...props}: LineR
                     ctx.closePath();
                     ctx.fill();
                 }
-                for(let i = 0; i < line.elevations.length; i++) {
+                for(const point of line.coordinatesResampled.features) {
                     ctx.beginPath();
-                    ctx.fillStyle = elevationColor(line.elevations[i]);
+                    ctx.fillStyle = elevationColor(point.properties.elevation);
                     ctx.arc(
-                        calcX(i / (line.elevations.length - 1)),
-                        calcY((line.elevations[i] - minElevation) / (maxElevation - minElevation)),
+                        calcX(point.properties.fractionAlong),
+                        calcY((point.properties.elevation - minElevation) / elevationRange),
                         noteDotRadius,
                         0,
                         2 * Math.PI

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Splitter from './components/Splitter';
 
-import { MapView } from './MapView';
+import MapView from './MapView';
 import styled from 'styled-components';
 import LineControls from './components/LineControls';
 import LineRenderer from './components/LineRenderer';
