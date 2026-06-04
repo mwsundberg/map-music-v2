@@ -1,65 +1,70 @@
-import { Fragment, useId, type ReactNode } from "react";
-import styled from "styled-components";
-import { buttonStyles } from "./Button";
+import { Fragment, useId, type ReactNode } from 'react';
+import styled from 'styled-components';
+import { buttonStyles } from './Button';
 
 interface RadioSetProps<T extends string|number> {
-    legend?: ReactNode,
-    name?: string,
-    options: Record<T, ReactNode>,
-    checked: T,
-    onChange: (value: T)=>void
+	legend?: ReactNode,
+	name?: string,
+	options: Record<T, ReactNode>,
+	checked: T,
+	onChange: (value: T)=>void
 }
 
 const FieldSetStyled = styled.fieldset`
-    border: none;
-    padding: 7px 0;
-    margin: 0;
-    height: min-content;
+	border: none;
+	padding: 7px 0;
+	margin: 0;
+	height: min-content;
 
-    legend {
-        float: left;
-        padding: 0;
-    }
+	legend {
+		float: left;
+		padding: 0;
+	}
 
-    input {
-        opacity: 0;
-        position: fixed;
-        left: 1000vw;
-        top: 1000vh;
-    }
-    label {
-        ${buttonStyles}
-    }
-    label:nth-of-type(1) {
-        border-radius: 1000rem 0 0 1000rem;
-        border-inline-end-width: 1px;
-    }
-    label:nth-last-of-type(1) {
-        border-radius: 0 1000rem 1000rem 0;
-        border-inline-start-width: 1px;
-    }
-    
-    input:checked + label {
-        border-color: var(--foreground);
-        background-color: var(--foreground);
-        color: var(--background);
-    }
-    input + label:hover, input:focus + label {
-        border-color: var(--foreground-light);
-        color: var(--foreground-light);
-    }
+	input {
+		opacity: 0;
+		position: fixed;
+		left: 1000vw;
+		top: 1000vh;
+	}
+	label {
+		${buttonStyles}
+	}
+	label:nth-of-type(1) {
+		border-radius: 1000rem 0 0 1000rem;
+		border-inline-end-width: 1px;
+	}
+	label:nth-last-of-type(1) {
+		border-radius: 0 1000rem 1000rem 0;
+		border-inline-start-width: 1px;
+	}
+	
+	input:checked + label {
+		border-color: var(--foreground);
+		background-color: var(--foreground);
+		color: var(--background);
+	}
+	input + label:hover, input:focus + label {
+		border-color: var(--foreground-light);
+		color: var(--foreground-light);
+	}
 `;
 
 export default function RadioSet<T extends string|number>({legend, name, options, checked, onChange}: RadioSetProps<T>) {
-    const id = useId();
-    name = name ?? id;
+	const id = useId();
+	name = name ?? id;
 
-    return (
-        <FieldSetStyled>
-            {legend && <legend>{legend}</legend>}
-            {Object.keys(options).map((key) => {
-                return (<Fragment key={key}><input id={id + key} type='radio' name={name} value={key} checked={key === checked} onChange={(ev)=>{onChange(ev.target.value as T)}}/><label htmlFor={id + key}    >{options[key as T]}</label></Fragment>)
-            })}
-        </FieldSetStyled>
-    );
+	return (
+		<FieldSetStyled>
+			{legend && <legend>{legend}</legend>}
+			{Object.keys(options).map((key)=>{
+				return (
+					<Fragment key={key}>
+						<input id={id + key} type='radio' name={name} value={key} checked={key === checked} onChange={(ev)=>{onChange(ev.target.value as T)}} />
+						<label htmlFor={id + key}>{options[key as T]}</label>
+					</Fragment>
+				);
+			})}
+		</FieldSetStyled>
+	);
 }

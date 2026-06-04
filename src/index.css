@@ -1,41 +1,41 @@
 :root {
-  --background-dark: #303030;
-  --background: #3d3d3d;
-  --foreground: #aaaaaa;
-  --foreground-text: #eeeeee;
-  --foreground-light: #ffffff;
-  color-scheme: dark;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+	--background-dark: #303030;
+	--background: #3d3d3d;
+	--foreground: #aaaaaa;
+	--foreground-text: #eeeeee;
+	--foreground-light: #ffffff;
+	color-scheme: dark;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background-dark: #303030;
-    --background: #3d3d3d;
-    --foreground: #aaaaaa;
-    --foreground-text: #eeeeee;
-    --foreground-light: #ffffff;
-  }
+	:root {
+		--background-dark: #303030;
+		--background: #3d3d3d;
+		--foreground: #aaaaaa;
+		--foreground-text: #eeeeee;
+		--foreground-light: #ffffff;
+	}
 }
 
 *, *::before, *::after {
-  box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 #root {
-  height: 100vh;
+	height: 100vh;
 }
 
 body {
-  margin: 0;
-  min-height: 100vh;
+	margin: 0;
+	min-height: 100vh;
 
-  background-color: var(--background-dark);
-  color: var(--foreground-text);
-  font-size: 13px;
-  font-family: sans-serif;
+	background-color: var(--background-dark);
+	color: var(--foreground-text);
+	font-size: 13px;
+	font-family: sans-serif;
 }
 

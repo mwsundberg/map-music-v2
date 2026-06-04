@@ -1,5 +1,4 @@
-import styled from "styled-components";
-
+import styled from 'styled-components';
 
 const InputStyled = styled.input`
 	background-color: transparent;
@@ -8,12 +7,12 @@ const InputStyled = styled.input`
 	border-bottom: 2px solid var(--foreground);
 	-webkit-appearance: textfield;
 
-    &:focus-within {
-        outline: none;
-        border-color: var(--foreground-light);
-    }
+	&:focus-within {
+		outline: none;
+		border-color: var(--foreground-light);
+	}
 `;
 
 export default function TextInput(props: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>) {
-    return <InputStyled type='text' {...props} />;
+	return <InputStyled type='text' {...props} />;
 }
