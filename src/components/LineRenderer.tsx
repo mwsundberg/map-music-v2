@@ -9,11 +9,18 @@ interface LineRendererProps {
 	line: Line|undefined,
 	/** The size to draw the note dots */
 	noteDotRadius?: number,
+	/** The elevation profile and dot borders color */
+	mainColor?: string,
 }
 
 
-export default function LineRenderer({line, noteDotRadius = 10, ...props}: LineRendererProps) {
-	const canvasRef = useRef<HTMLCanvasElement>(null);
+export default function LineRenderer({line, noteDotRadius = 10, mainColor='white', ...props}: LineRendererProps) {
+	/* Early return for no line case */
+	if(!line){
+		return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" {...props} style={{width: '100%', height: '100px'}}></svg>;
+	}
+
+	const svgRef = useRef<SVGSVGElement>(null);
 
 	/* Need a map ref to resample the elevations along the line for the detailed elevation layer */
 	const {default: mapRef} = useMap();
@@ -22,13 +29,13 @@ export default function LineRenderer({line, noteDotRadius = 10, ...props}: LineR
 	const [[width, height], setDimensions] = useState<[number, number]>([0, 0]);
 	useEffect(()=>{
 		/* Set up the ResizeObserver */
-		if (canvasRef.current) {
+		if (svgRef.current) {
 			const resizeObserver = new ResizeObserver((entries)=>{
 				for(const entry of entries) {
 					if(entry.contentRect) setDimensions([entry.contentRect.width, entry.contentRect.height])
 				}
 			});
-			resizeObserver.observe(canvasRef.current);
+			resizeObserver.observe(svgRef.current);
 
 			return ()=>resizeObserver.disconnect();
 		}
@@ -37,7 +44,7 @@ export default function LineRenderer({line, noteDotRadius = 10, ...props}: LineR
 	/* Resample at a higher resolution to draw the elevation profile, with the notes drawn in as a separate layer (so lines with fewer notes still look pretty)
 	 * The `elevationsResampled` return is in the 0-1 range already, but we still need the min and max elevations for drawing in the note circles at the right height */
 	const [minElevation, elevationRange, elevationsResampled] = useMemo(()=>{
-		if(line && mapRef) {
+		if(mapRef) {
 			const lineResampled = resampleCoords(mapRef, '', line.coordinatesRaw, {...line.resampleSettings, mode: 'count', count: Math.round(width / 4)});
 			const elevationsResampledRaw = lineResampled.features.map((point)=>point.properties.elevation);
 
@@ -49,69 +56,43 @@ export default function LineRenderer({line, noteDotRadius = 10, ...props}: LineR
 			const elevationsResampled = rescaleFrom0To1(elevationsResampledRaw);
 
 			return [minElevation, elevationRange, elevationsResampled];
-		} else return [undefined, undefined, undefined];
-	}, [line?.id, width]);
+		} else throw new Error(`MapRef not found in LineRenderer rendering Line '${line.name ?? line.id}'`);
+	}, [line?.id, Math.round(width / 4)]);
 
-	/* Rerender whenever the dimensions or line changes */
-	useEffect(()=>{
-		if(canvasRef.current && width && height) {
-			const ctx = canvasRef.current.getContext('2d')!;
-			ctx.clearRect(0, 0, width, height);
+	/* Helper functions to convert [0,1] range coordinates to the svg coordinate value, accounting for the radius of the dots too */
+	const noteDotRadiusWithBorder = noteDotRadius + 2;
+	const calcX = (x: number)=>((width - 2 * noteDotRadiusWithBorder) * x + noteDotRadiusWithBorder);
+	const calcY = (y: number)=>((height - 2 * noteDotRadiusWithBorder) - (height - 2 * noteDotRadiusWithBorder) * y + noteDotRadiusWithBorder);
 
-			if(line && elevationsResampled) {
-				/** Helper functions to convert [0,1] range coordinates to the canvas value, accounting for the radius of the dots too */
-				const noteDotRadiusWithBorder = noteDotRadius + 2;
-				const calcX = (x: number)=>((width - 2 * noteDotRadius) * x + noteDotRadius);
-				const calcY = (y: number)=>((height - 2 * noteDotRadiusWithBorder) - (height - 2 * noteDotRadiusWithBorder) * y + noteDotRadiusWithBorder);
 
-				/* Draw the elevations profile (inset slightly so the overlayed dots aren't clipped off the edge) */
-				ctx.beginPath();
-				ctx.fillStyle = 'white';
-				ctx.moveTo(0, height);
-				ctx.lineTo(0, calcY(elevationsResampled[0]));
-				for(let i = 0; i < elevationsResampled.length; i++) {
-					ctx.lineTo(
-						calcX(i / (elevationsResampled.length - 1)),
-						calcY(elevationsResampled[i])
-					);
-				}
-				ctx.lineTo(width, calcY(elevationsResampled[elevationsResampled.length - 1]));
-				ctx.lineTo(width, height);
-				ctx.closePath();
-				ctx.fill();
+	/* The elevation profile (inset slightly so the overlayed dots aren't clipped off the edge)  */
+	const elevationsResampledLastIndex = elevationsResampled.length - 1;
+	const elevationProfilePath = <path fill={mainColor} d={
+		`M 0 ${height}` + /* Bottom left */
+		`L 0 ${calcY(elevationsResampled[0])}` + /* Start of line minus margin */
+		elevationsResampled.map((el, i)=>`L ${calcX(i / elevationsResampledLastIndex)} ${calcY(el)}`).join(' ') + /* Each point along the elevation profile */
+		`L ${width} ${calcY(elevationsResampled[elevationsResampledLastIndex])}` + /* End of line plus margin */
+		`L ${width} ${height}` + /* Bottom right */
+		'Z' /* Close path */
+	} />;
 
-				/* Draw the notes themselves as colored circles at each sampled elevation, drawing them twice to get a white border underneath each one */
-				for(const point of line.coordinatesResampled.features) {
-					ctx.beginPath();
-					ctx.fillStyle = 'white';
-					ctx.arc(
-						calcX(point.properties.fractionAlong),
-						calcY((point.properties.elevation - minElevation) / elevationRange),
-						noteDotRadiusWithBorder,
-						0,
-						2 * Math.PI
-					);
-					ctx.closePath();
-					ctx.fill();
-				}
-				for(const point of line.coordinatesResampled.features) {
-					ctx.beginPath();
-					ctx.fillStyle = elevationColor(point.properties.elevation);
-					ctx.arc(
-						calcX(point.properties.fractionAlong),
-						calcY((point.properties.elevation - minElevation) / elevationRange),
-						noteDotRadius,
-						0,
-						2 * Math.PI
-					);
-					ctx.closePath();
-					ctx.fill();
-				}
-			}
-		}
-	}, [width, height, line, elevationsResampled]);
+	/* The notes themselves as colored circles at each sampled elevation, drawn twice so the borders are layered underneath the dots */
+	const coloredDots = line.coordinatesResampled.features.map((point)=>(
+		<circle key={'fill' + point.properties.fractionAlong}
+			fill={elevationColor(point.properties.elevation)} r={noteDotRadius}
+			cx={calcX(point.properties.fractionAlong)} cy={calcY((point.properties.elevation - minElevation) / elevationRange)} />
+	));
+	const borderDots = line.coordinatesResampled.features.map((point)=>(
+		<circle key={'border' + point.properties.fractionAlong}
+			fill={mainColor} r={noteDotRadiusWithBorder}
+			cx={calcX(point.properties.fractionAlong)} cy={calcY((point.properties.elevation - minElevation) / elevationRange)} />
+	));
 
 	return (
-		<canvas ref={canvasRef} width={width} height={height} {...props} style={{width: '100%', height: '100px'}}></canvas>
+		<svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${width} ${height}`} {...props} style={{width: '100%', height: '100px'}}>
+			{elevationProfilePath}
+			{borderDots}
+			{coloredDots}
+		</svg>
 	)
 }
