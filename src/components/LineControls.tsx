@@ -43,8 +43,6 @@ export default function LineControls({activeLine, updateLine, removeLine, livePr
 			</section>
 			<section>
 				<h2>Resampling Settings</h2>
-				<label htmlFor={id+'smoothingFactor'}>Smoothing Factor:</label><input id={id+'smoothingFactor'} type='range' min={0} max={100} value={resampleSettings.smoothingFactor * 100} onChange={(ev)=>setResampleSettings({...resampleSettings, smoothingFactor: parseInt(ev.target.value)/100})} />
-				<br />
 				<RadioSet legend='Resample Mode: ' options={{'count': 'Note Count', 'distance': 'Distance'}} checked={resampleSettings.mode} onChange={(value)=>setResampleSettings({...resampleSettings, mode: value})} />
 				<br />
 				{resampleSettings.mode === 'count' && <>

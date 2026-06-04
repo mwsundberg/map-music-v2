@@ -25,7 +25,6 @@ function App() {
 	/* Settings state */
 	const [livePreview, setLivePreview] = useState(true);
 	const [resampleSettings, setResampleSettingsRaw] = useState<ResampleSettings>({
-		smoothingFactor: 0.25,
 		mode: 'distance',
 		count: 50,
 		distance: 500,

@@ -6,8 +6,7 @@ import { makeSequence, playLine } from './audioGeneration';
 import { useMemo, useState } from 'react';
 
 export type ResampleSettings = {
-	/** How much to smooth the line, range [0,1] */
-	smoothingFactor: number;
+	/** If the line should be mapped to a set number of notes or dynamically sized based on distance */
 	mode: 'count' | 'distance';
 	/** The number of coordinates to resample to (ignored if resampling by distance) */
 	count: number;

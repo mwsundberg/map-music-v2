@@ -4,10 +4,7 @@ import { along, featureCollection, length } from '@turf/turf';
 import type { MapRef } from 'react-map-gl/maplibre';
 
 /** Generate an evenly spaced set of points along a GeoJSON LineString */
-export function resampleCoords(map: MapRef, id: string, coords: Feature<LineString>, {smoothingFactor, mode, count: sampleCount, distance: gapDistance, units}: ResampleSettings): FeatureCollection<Point, { lineId: string, fractionAlong: number, elevation: number }> {
-	/* Smoothing */
-	/* TODO */
-
+export function resampleCoords(map: MapRef, id: string, coords: Feature<LineString>, {mode, count: sampleCount, distance: gapDistance, units}: ResampleSettings): FeatureCollection<Point, { lineId: string, fractionAlong: number, elevation: number }> {
 	/* Get the length divide by to get a given number of chunks */
 	const totalLength = length(coords, {units: units});
 	if(mode === 'count') {
@@ -28,7 +25,7 @@ export function resampleCoords(map: MapRef, id: string, coords: Feature<LineStri
 		coordsResampled.push(point as Feature<Point, {lineId: string, fractionAlong: number, elevation: number}>);
 	}
 	/* The last point isn't always added properly in 'count' mode */
-	if(mode === 'count') {
+	if(mode === 'count' && coordsResampled.length !== sampleCount) {
 		const point = along(coords, totalLength, {units: units});
 		point.properties = {
 			lineId: id,
