@@ -23,16 +23,21 @@ type ScrollableNumberInputProps = Omit<React.DetailedHTMLProps<React.InputHTMLAt
 	onChange: (value: number|undefined)=>void
 })
 
-export default function NumberInput({step = 'any', min, max, value, onChange, passInvalidState,
+export default function NumberInput({step = 'any', min, max, value: valueRaw, onChange, passInvalidState,
 	/* Defaults are 0.1, 1, 10, 100, or step appropriate values */
 	ctrlMultiplier = (step === 'any')? 0.1:step,
 	normalMultiplier = (step === 'any' || step < 1)? 1:step,
 	shiftMultiplier = (step === 'any' || step < 1)? 10:(step * 10),
 	ctrlShiftMultiplier = (step === 'any' || step < 1)? 100:(step * 100),
 	...props}: ScrollableNumberInputProps) {
+	/* Convert value from `number|undefined` into `number|NaN` */
+	const value = valueRaw ?? NaN;
 
 	/* Internal state store to accomodate invalid inputs without having to pass invalid inputs to the value/onChange state */
-	const [inputValue, setInputValue] = useState(value ?? NaN);
+	const [inputValue, setInputValue] = useState(value);
+
+	/* Previous state value to prevent deadlocks between prop and internal state updating each other */
+	const previousValue = useRef(value);
 
 	/* On scroll, increment the value by the appropriate multiplier after correcting for the scroll step size */
 	function onWheel(ev: WheelEvent) {
@@ -71,17 +76,33 @@ export default function NumberInput({step = 'any', min, max, value, onChange, pa
 	}, [isFocused, ctrlMultiplier, normalMultiplier, shiftMultiplier, ctrlShiftMultiplier]);
 
 	/* Sync prop state and internal state */
-	/* TODO debug, gets caught in an update loop sometimes with fast edits */
 	useEffect(()=>{
-		if(inputValue !== value) {
+		/* Early exit for all states in sync */
+		if(value === inputValue) {
+			previousValue.current = value;
+			return;
+		}
+
+		/* If all out of sync, go with the prop value */
+		if(previousValue.current !== inputValue && previousValue.current !== value) {
+			console.warn('Total state mismatch in number input: ', {prev: previousValue.current, value, inputValue});
+			setInputValue(value);
+			previousValue.current = value;
+		}
+
+		/* Set prop state (internal updated) */
+		/* Checking the internal value since the prop will be automatically different if not passing invalid state */
+		if(previousValue.current !== inputValue) {
 			if(isNaN(inputValue) && passInvalidState) onChange(undefined);
 			else if(!isNaN(inputValue)) onChange(inputValue);
+			previousValue.current = inputValue;
+		} 
+		/* Set internal state (prop changed) */
+		else {
+			setInputValue(value);
+			previousValue.current = value;
 		}
-	}, [inputValue, passInvalidState]);
-
-	useEffect(()=>{
-		if(value !== inputValue) setInputValue(value ?? NaN);
-	}, [value]);
+	}, [inputValue, value, passInvalidState]);
 
 
 	return <TextInput ref={inputRef}
@@ -104,7 +125,7 @@ export default function NumberInput({step = 'any', min, max, value, onChange, pa
 		onBlur={()=>{
 			setIsFocused(false);
 			/* Reset to the last valid value if currently invalid */
-			if(isNaN(inputValue)) setInputValue(value ?? NaN);
+			if(isNaN(inputValue)) setInputValue(value);
 		}}
 		{...props} />
 }
