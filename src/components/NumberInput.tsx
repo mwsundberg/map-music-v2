@@ -83,13 +83,6 @@ export default function NumberInput({step = 'any', min, max, value: valueRaw, on
 			return;
 		}
 
-		/* If all out of sync, go with the prop value */
-		if(previousValue.current !== inputValue && previousValue.current !== value) {
-			console.warn('Total state mismatch in number input: ', {prev: previousValue.current, value, inputValue});
-			setInputValue(value);
-			previousValue.current = value;
-		}
-
 		/* Set prop state (internal updated) */
 		/* Checking the internal value since the prop will be automatically different if not passing invalid state */
 		if(previousValue.current !== inputValue) {
