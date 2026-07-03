@@ -24,11 +24,22 @@ const InputStyled = styled.input`
 /* @ts-ignore */
 const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
 
-export default function TextInput({value, onFocus, onKeyDown, ...props}: TextInputProps) {
+export default function TextInput({value, onInput, onFocus, onKeyDown, ...props}: TextInputProps) {
 	/* Store the state on focus so it can be restored if the user hits escape */
 	const [initialState, setInitialState] = useState(value);
 
 	return <InputStyled type='text' value={value}
+		onInput={(ev)=>{
+			/* Prevents entering invalid characters into an empty input */
+			/* @ts-ignore (ev.target isn't interpreted as an HTMLInputElement) */
+			if(ev.target.validity.badInput || ev.target.validity.patternMismatch) {
+				/* @ts-ignore (same as above) */
+				ev.target.value = value;
+			}
+
+			/* Call the onInput of the caller */
+			if(onInput) onInput(ev);
+		}}
 		onFocus={(ev) => {
 			/* Store the initial state */
 			setInitialState(ev.target.value);

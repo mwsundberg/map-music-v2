@@ -106,14 +106,6 @@ export default function NumberInput({step = 'any', min, max, value: valueRaw, on
 			if(ev.target.value === '' && ev.target.validity.badInput) { return; }
 			setInputValue(parseFloat(ev.target.value));
 		}}
-		onInput={(ev)=>{
-			/* Prevents entering invalid characters into an empty input */
-			/* @ts-ignore (ev.target isn't interpreted as an HTMLInputElement) */
-			if(ev.target.validity.badInput) {
-				/* @ts-ignore (same as above) */
-				ev.target.value = inputValue;
-			}
-		}}
 		onFocus={()=>setIsFocused(true)}
 		onBlur={()=>{
 			setIsFocused(false);
