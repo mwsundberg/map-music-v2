@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import TextInput from './TextInput';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ScrollableInputMutator } from './ScrollableInput';
+import ScrollableInput from './ScrollableInput';
 
-type ScrollableNumberInputProps = Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'value'|'step'|'onChange'|'min'|'max'> & {
+type ScrollableNumberInputProps = Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'type'|'value'|'step'|'onChange'|'min'|'max'> & {
+	type?: 'number',
 	step?: number|'any',
 	min?: number,
 	max?: number,
@@ -39,41 +41,20 @@ export default function NumberInput({step = 'any', min, max, value: valueRaw, on
 	/* Previous state value to prevent deadlocks between prop and internal state updating each other */
 	const previousValue = useRef(value);
 
-	/* On scroll, increment the value by the appropriate multiplier after correcting for the scroll step size */
-	function onWheel(ev: WheelEvent) {
-		ev.preventDefault();
-
-		/* If pixel scrolling, move 1 tick per 10 pixels scrolled, otherwise just treat the scroll event as a single input */
-		ev.deltaMode;
-		let scrollAmount = -Math.sign(ev.deltaY);
-		if(ev.deltaMode === 0) scrollAmount = (scrollAmount > 0)? Math.ceil(ev.deltaY / 10):Math.floor(ev.deltaY / 10);
-
-		/* Adjust the value accordingly */
+	/* Process a scroll event by incrementing by the amount selected by the modifier keys */
+	const scrollMutator: ScrollableInputMutator<number> = useCallback((value, {scrollAmount, ctrlKey, shiftKey}) => {
+		/* Adjust the value while clamping to min and max */
 		function applyMultiplier(multiplier: number) {
-			setInputValue((value)=>{
-				const newValue = value + scrollAmount * multiplier;
-				if(min !== undefined && newValue < min) return min;
-				else if(max !== undefined && newValue > max) return max;
-				else return newValue;
-			});
+			const newValue = (value || 0) + scrollAmount * multiplier;
+			if(min !== undefined && newValue < min) return min;
+			else if(max !== undefined && newValue > max) return max;
+			else return newValue;
 		}
-		if(ev.ctrlKey && ev.shiftKey) applyMultiplier(ctrlShiftMultiplier);
-		else if(ev.ctrlKey) applyMultiplier(ctrlMultiplier);
-		else if(ev.shiftKey) applyMultiplier(shiftMultiplier);
-		else applyMultiplier(normalMultiplier);
-	}
-
-	/* Only want an active scroll listener when the input is focused, so need to coordinate adding the listener with a useEffect hook.
-	 * Manual listener adding is also needed since react scroll listeners aren't cancelable */
-	const [isFocused, setIsFocused] = useState(false);
-	const inputRef = useRef<HTMLInputElement>(null);
-	useEffect(()=>{
-		if(isFocused) {
-			const input = inputRef.current;
-			input?.addEventListener('wheel', onWheel, { passive: false });
-			return ()=>input?.removeEventListener('wheel', onWheel);
-		}
-	}, [isFocused, ctrlMultiplier, normalMultiplier, shiftMultiplier, ctrlShiftMultiplier]);
+		if(ctrlKey && shiftKey) return applyMultiplier(ctrlShiftMultiplier);
+		else if(ctrlKey) return applyMultiplier(ctrlMultiplier);
+		else if(shiftKey) return applyMultiplier(shiftMultiplier);
+		else return applyMultiplier(normalMultiplier);
+	}, [ctrlShiftMultiplier, ctrlMultiplier, shiftMultiplier, normalMultiplier]);
 
 	/* Sync prop state and internal state */
 	useEffect(()=>{
@@ -98,19 +79,18 @@ export default function NumberInput({step = 'any', min, max, value: valueRaw, on
 	}, [inputValue, value, passInvalidState]);
 
 
-	return <TextInput ref={inputRef}
+	return <ScrollableInput
 		type='number' step={step} min={min} max={max}
 		value={isNaN(inputValue)? '':inputValue}
+		scrollMutator={scrollMutator}
 		onChange={(ev)=>{
 			/* Actual bad inputs don't change state as to not clear the input on typoing */
 			if(ev.target.value === '' && ev.target.validity.badInput) { return; }
 			setInputValue(parseFloat(ev.target.value));
 		}}
-		onFocus={()=>setIsFocused(true)}
 		onBlur={()=>{
-			setIsFocused(false);
 			/* Reset to the last valid value if currently invalid */
 			if(isNaN(inputValue)) setInputValue(value);
 		}}
-		{...props} />
+		{...props} />;
 }
