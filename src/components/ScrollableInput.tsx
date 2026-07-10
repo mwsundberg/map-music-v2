@@ -3,6 +3,7 @@ import TextInput from './TextInput';
 
 /** The amount scrolled and any modifier keys held while scrolling */
 type ScrollEventProperties = {
+	/** Positive or negative integer, usually 1 */
 	scrollAmount: number,
 	ctrlKey: boolean,
 	shiftKey: boolean,
@@ -17,13 +18,13 @@ type ScrollableInputProps = Omit<React.DetailedHTMLProps<React.InputHTMLAttribut
 	value: number|'',
 
 	/** A function that mutates the state given a positive or negative scroll distance and modifier keys. Must be wrapped in `useCallback` to avoid rebinding an event listener on every input */
-	scrollMutator: ScrollableInputMutator<number>,
+	scrollMutator?: ScrollableInputMutator<number>,
 } | {
-	type: 'string',
+	type?: 'text',
 	value: string,
 
 	/** A function that mutates the state given a positive or negative scroll distance and modifier keys. Must be wrapped in `useCallback` to avoid rebinding an event listener on every input */
-	scrollMutator: ScrollableInputMutator<string>,
+	scrollMutator?: ScrollableInputMutator<string>,
 });
 
 /* Get the native input value setter instead of react's overwritten one */
@@ -32,13 +33,13 @@ type ScrollableInputProps = Omit<React.DetailedHTMLProps<React.InputHTMLAttribut
 const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
 
 /** Text input that can be modified by scrolling the mouse wheel over it, modification given as a function of the current value, the amount scrolled, and the modifier keys held */
-export default function ScrollableInput({scrollMutator, type='string', onFocus, onBlur, ...props}: ScrollableInputProps) {
+export default function ScrollableInput({scrollMutator, type='text', onFocus, onBlur, ...props}: ScrollableInputProps) {
 	/* Only want an active scroll listener when the input is focused, so need to coordinate adding the listener with a useEffect hook.
 	 * Manual listener adding is also needed since react scroll listeners aren't cancelable */
 	const [isFocused, setIsFocused] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	useEffect(()=>{
-		if(isFocused) {
+		if(isFocused && scrollMutator) {
 			console.log('attaching new scroll listener');
 
 			/* Unmount the wheel event listener with an AbortController */
