@@ -20,7 +20,7 @@ const PitchNotationStyled = styled.span`
 /* Regex to recognize a valid input */
 const validInputPattern = '\\d{0,5}\s?[Hh]?[Zz]?|[CDEFGABcdefgab](bb|b|#|x)?(-?[1-4]?|\\d?|1?[01]?)';
 const hzInput = /^(\d{1,5}\s?hz)$/i; /* Range: (0, 30000] Unsure if this is the actual limit */
-const midiInput = /^(\d{1,3})$/; /* Range: [-37, 156] */
+const midiInput = /^(\d{1,3})$/; /* Range: [0, 127] */
 const standardInput = /^([CDEFGAB])(bb|b|#|x)?(-[1-4]|[0-9]|10|11)$/i; /* Range: [C-4, B11] */
 
 /** Check if a frequency is an exact note, returns note string or undefined */
@@ -65,22 +65,36 @@ const midiScrollMutator: ScrollableInputMutator<string> = (valueRaw, {scrollAmou
 		/* Increment by an octave */
 		value += scrollAmount * 12;
 	}
-	/* For fine or normal editing (Ctrl/None) increment by an accidental */
+	/* For fine or normal editing (Ctrl/None) increment by sharp/note */
 	else {
 		value += scrollAmount * 1;
 	}
 
 	/* Clamp to valid range */
-	console.log(value)
-	value = Math.max(Math.min(value, 156), -37);
+	value = Math.max(Math.min(value, 127), 0);
 
 	return value.toString();
 };
 
 /** Incrementer function for standard pitch notation note */
-const standardScrollMutator: ScrollableInputMutator<string> = (value, properties)=>{
-	/* Convert the note into midi scale and then call the midi scroll mutator */
-	return Frequency(parseInt(midiScrollMutator(Frequency(value).toMidi().toString(), properties)), 'midi').toNote();
+const standardScrollMutator: ScrollableInputMutator<string> = (valueRaw, {scrollAmount, shiftKey})=>{
+	/* Convert the note into midi scale for editing (since dealing with sharps is hard) */
+	let value: number = Frequency(valueRaw).toMidi();
+
+	/* If bulk editing (Shift/CtrlShift) increment by an octave */
+	if(shiftKey) {
+		/* Increment by an octave */
+		value += scrollAmount * 12;
+	}
+	/* For fine or normal editing (Ctrl/None) increment by sharp/note */
+	else {
+		value += scrollAmount * 1;
+	}
+
+	/* Clamp to valid range */
+	value = Math.max(Math.min(value, 156), -37);
+
+	return Frequency(value, 'midi').toNote();
 };
 
 
